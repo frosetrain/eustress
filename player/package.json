@@ -30,5 +30,8 @@
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint ."
     },
-    "type": "module"
+    "type": "module",
+    "dependencies": {
+        "mobile-drag-drop": "^3.0.0-rc.0"
+    }
 }
