@@ -20,20 +20,20 @@
     <div class="flex w-screen max-w-screen-md flex-col justify-between rounded-lg bg-blue-800 p-2 sm:m-8 sm:p-4">
         <!-- Other stacks -->
         <div class="flex justify-between gap-1">
-            <Card type={1} color={0} number={7} canDrag={false} />
+            <Card type={1} color={0} number={7} />
             <div class="flex gap-1 sm:gap-2">
-                <Card type={0} color={0} number={7} canDrag={false} />
-                <Card type={0} color={1} number={2} canDrag={false} />
-                <Card type={0} color={2} number={8} canDrag={false} />
-                <Card type={0} color={0} number={2} canDrag={false} />
+                <Card type={0} color={0} number={7} />
+                <Card type={0} color={1} number={2} />
+                <Card type={0} color={2} number={8} />
+                <Card type={0} color={0} number={2} />
             </div>
         </div>
         <div class="flex justify-center gap-1 sm:gap-2">
             <button disabled class="my-auto h-12 w-24 shrink-0 rounded border-4 border-red-600 bg-amber-400 text-base font-black text-gray-900 disabled:opacity-25 sm:mr-8 sm:h-16 sm:w-32 sm:text-xl"
                 >STRESS</button
             >
-            <Card type={0} color={2} number={3} canDrag={false} />
-            <Card type={0} color={3} number={3} canDrag={false} />
+            <Card type={0} color={2} number={3} canDrop={true} />
+            <Card type={0} color={3} number={3} canDrop={true} />
             <button class="my-auto h-12 w-24 shrink-0 rounded border-4 border-red-600 bg-amber-400 text-base font-black text-gray-900 disabled:opacity-25 sm:ml-8 sm:h-16 sm:w-32 sm:text-xl"
                 >STRESS</button
             >
@@ -41,12 +41,12 @@
         <!-- Player stacks -->
         <div class="flex justify-between gap-1">
             <div class="flex gap-1 sm:gap-2">
-                <Card type={0} color={0} number={7} canDrag={true} />
-                <Card type={0} color={1} number={2} canDrag={true} />
-                <Card type={0} color={2} number={9} canDrag={true} />
-                <Card type={0} color={0} number={1} canDrag={true} />
+                <Card type={0} color={0} number={7} canDrag={true} canDrop={true} />
+                <Card type={0} color={1} number={2} canDrag={true} canDrop={true} />
+                <Card type={0} color={2} number={9} canDrag={true} canDrop={true} />
+                <Card type={0} color={0} number={1} canDrag={true} canDrop={true} />
             </div>
-            <Card type={1} color={3} number={7} canDrag={true} />
+            <Card type={1} color={3} number={7} canDrag={true} onclick={console.log("clicked")} />
         </div>
     </div>
 </div>

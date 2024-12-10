@@ -1,12 +1,11 @@
 <script lang="ts">
-    import { allowDrop, drag, drop } from "$lib/dragndrop";
-    let { type, color, number, canDrag }: { type: number; color: number; number: number; canDrag: boolean } = $props();
+    import { dragenter, dragover, dragstart, drop, dragleave } from "$lib/dragndrop";
+    let { type, color, number, canDrag = false, canDrop = false }: { type: number; color: number; number: number; canDrag: boolean; canDrop: boolean } = $props();
     const cardWidth = 2.25;
     const cardHeight = 3.5;
 </script>
 
-<!-- <div id="yay" ondrop={(event) => drop(event)} ondragover={(event) => allowDrop(event)}>Drop stuff to me</div> -->
-<div id={`${type}${color}${number}`} draggable={canDrag ? true : false} ondragstart={(event) => drag(event)}>
+<div id={`${type}${color}${number}`} class="relative" draggable={canDrag ? true : false} ondragstart={(event) => dragstart(event)} onclick={() => console.log("clicked")}>
     {#if type === 0}
         <!-- Normal card -->
         <div id="wh" style="--card-x: {(number - 1) * cardWidth}in; --card-y: {color * cardHeight}in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"></div>
@@ -16,6 +15,17 @@
     {:else if type === 2}
         <!-- No card -->
         <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-blue-600"></div>
+    {/if}
+
+    {#if canDrop}
+        <div
+            id="yay"
+            class="absolute left-0 top-0 h-full w-full rounded-lg border-fuchsia-500"
+            ondrop={(event) => drop(event)}
+            ondragenter={(event) => dragenter(event)}
+            ondragleave={(event) => dragleave(event)}
+            ondragover={(event) => dragover(event)}
+        ></div>
     {/if}
 </div>
 
