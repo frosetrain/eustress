@@ -46,7 +46,7 @@
                 <Card type={0} color={2} number={9} canDrag={true} canDrop={true} />
                 <Card type={0} color={0} number={1} canDrag={true} canDrop={true} />
             </div>
-            <Card type={1} color={3} number={7} canDrag={true} onclick={console.log("clicked")} />
+            <Card type={1} color={3} number={7} canDrag={true} />
         </div>
     </div>
 </div>
