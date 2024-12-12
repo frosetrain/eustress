@@ -19,7 +19,7 @@
 
     {#if canDrop}
         <div
-            id="yay"
+            id={`${type}${color}${number}`}
             class="absolute left-0 top-0 h-full w-full rounded-lg border-fuchsia-500"
             ondrop={(event) => drop(event)}
             ondragenter={(event) => dragenter(event)}
