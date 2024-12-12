@@ -15,6 +15,6 @@ export function dragstart(ev: DragEvent) {
 export function drop(ev: DragEvent) {
     ev.preventDefault();
     ev.target.classList.remove("border-8");
-    var fromSlot = ev.dataTransfer.getData("fromSlot");
+    const fromSlot = ev.dataTransfer.getData("fromSlot");
     console.log(fromSlot, ev.target.id);
 }
