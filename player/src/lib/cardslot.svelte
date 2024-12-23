@@ -1,6 +1,6 @@
 <script lang="ts">
     import { dragenter, dragover, dragstart, drop, dragleave } from "$lib/dragndrop.svelte";
-    import { SlotType, CardSlot } from "$lib/game.svelte";
+    import { selected, CardSlot } from "$lib/game.svelte";
     let { card }: { card: CardSlot } = $props();
     const cardWidth = 2.25;
     const cardHeight = 3.5;
@@ -34,6 +34,9 @@
         </div>
     {/if}
 
+    {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}
+        <div id={`h${card.type} ${card.id}`} class="absolute left-0 top-0 h-full w-full rounded-lg border-8 border-orange-500"></div>
+    {/if}
     {#if card.canDrop}
         <div
             id={`${card.type} ${card.id}`}
