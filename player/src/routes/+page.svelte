@@ -61,7 +61,7 @@
 
 <svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
 
-<div class="flex min-h-screen justify-center bg-amber-100 dark:bg-gray-900">
+<div class="flex min-h-dvh justify-center bg-amber-100 dark:bg-gray-900">
     <div
         class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-700 p-2 shadow-lg shadow-orange-600 ring-4 ring-orange-600/60 sm:m-8 sm:rounded-lg sm:p-4"
     >
