@@ -41,7 +41,6 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     if (moving.value) {
         return;
     }
-    moving.value = true;
     if (
         !(
             (fromSlotType === SlotType.playerDecks && toSlotType === SlotType.playerStacks) ||
@@ -55,6 +54,7 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     if (fromSlot.count <= 0) {
         return;
     }
+    moving.value = true;
     // Update from slot
     gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({ count: fromSlot.count - 1, canDrag: fromSlot.count > 1 });
 
@@ -64,7 +64,6 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     fromFake.style.zIndex = "10";
     const offsetX = toFake.getBoundingClientRect().x - fromFake.getBoundingClientRect().x;
     const offsetY = toFake.getBoundingClientRect().y - fromFake.getBoundingClientRect().y;
-    console.log(offsetX, offsetY);
     const animation = animate(fromFake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
     delay(() => {
         // Reset the animation to the start and hide fake
