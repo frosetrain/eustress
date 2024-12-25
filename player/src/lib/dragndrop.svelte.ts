@@ -1,4 +1,4 @@
-import { SlotType, CardSlot, gameState, moveCard } from "$lib/game.svelte";
+import { moveCard, moving } from "$lib/game.svelte";
 
 export function dragover(ev: DragEvent) {
     ev.preventDefault();
@@ -17,6 +17,9 @@ export function dragstart(ev: DragEvent) {
 export function drop(ev: DragEvent) {
     ev.preventDefault();
     ev.target.classList.remove("border-8");
+    if (moving.value) {
+        return;
+    }
     const fromSlotRaw = ev.dataTransfer.getData("fromSlot").split(" ");
     const toSlotRaw = ev.target.id.split(" ");
     const fromSlotType = Number(fromSlotRaw[0]);

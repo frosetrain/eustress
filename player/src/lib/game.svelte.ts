@@ -1,4 +1,8 @@
 import { Data } from "dataclass";
+import { animate, delay } from "motion";
+
+export const moving = $state({ value: false }); // hack
+const animationDuration = 0.2;
 
 export const SlotType = {
     playerStacks: 0,
@@ -31,9 +35,13 @@ for (let i = 0; i < 4; ++i) {
     gameState.opponentStacks.push(CardSlot.create({ id: i, type: SlotType.opponentStacks }));
 }
 
-export const selected: { [id: string]: number | boolean } = $state({ active: false, slotType: 0, slotId: 0 });
+export const selected: { active: boolean; slotType: number; slotId: number } = $state({ active: false, slotType: 0, slotId: 0 });
 
-export function moveCard(fromSlotType: number, fromSlotId: number, toSlotType: number, toSlotId: number) {
+export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotType: number, toSlotId: number) {
+    if (moving.value) {
+        return;
+    }
+    moving.value = true;
     if (
         !(
             (fromSlotType === SlotType.playerDecks && toSlotType === SlotType.playerStacks) ||
@@ -42,19 +50,36 @@ export function moveCard(fromSlotType: number, fromSlotId: number, toSlotType: n
     ) {
         return;
     }
-    let fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
-    let toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
+    const fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
+    const toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
     if (fromSlot.count <= 0) {
         return;
     }
+    // Update from slot
     gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({ count: fromSlot.count - 1, canDrag: fromSlot.count > 1 });
-    gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
-        color: fromSlot.color,
-        number: fromSlot.number,
-        flipped: fromSlot.flipped,
-        count: toSlot.count + 1,
-        canDrag: toSlot.type !== SlotType.piles,
-    });
-    fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
-    toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
+
+    // Play animation
+    const fromFake = document.getElementById(`fake ${fromSlotType} ${fromSlotId}`)!;
+    const toFake = document.getElementById(`fake ${toSlotType} ${toSlotId}`)!;
+    fromFake.style.zIndex = "10";
+    const offsetX = toFake.getBoundingClientRect().x - fromFake.getBoundingClientRect().x;
+    const offsetY = toFake.getBoundingClientRect().y - fromFake.getBoundingClientRect().y;
+    console.log(offsetX, offsetY);
+    const animation = animate(fromFake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
+    delay(() => {
+        // Reset the animation to the start and hide fake
+        animation.cancel();
+        fromFake.style.zIndex = "-10";
+
+        // Update to slot
+        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
+            color: fromSlot.color,
+            number: fromSlot.number,
+            flipped: fromSlot.flipped,
+            count: toSlot.count + 1,
+            canDrag: toSlot.type !== SlotType.piles,
+        });
+
+        moving.value = false;
+    }, animationDuration);
 }

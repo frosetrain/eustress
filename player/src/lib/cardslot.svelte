@@ -16,7 +16,6 @@
     {#if card.flipped && card.count > 0}
         <!-- Normal card -->
         <div
-            id="wh"
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
             class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"
         >
@@ -29,13 +28,13 @@
         </div>
     {:else}
         <!-- No card -->
-        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-blue-600">
+        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800">
             <p>{card.canDrag} {card.canDrop} {card.count}</p>
         </div>
     {/if}
 
     {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}
-        <div id={`h${card.type} ${card.id}`} class="absolute left-0 top-0 h-full w-full rounded-lg border-8 border-orange-500"></div>
+        <div class="absolute left-0 top-0 h-full w-full rounded-lg border-8 border-orange-500"></div>
     {/if}
     {#if card.canDrop}
         <div
@@ -47,6 +46,14 @@
             ondragover={(event) => dragover(event)}
         ></div>
     {/if}
+
+    <div
+        id={`fake ${card.type} ${card.id}`}
+        style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
+        class="card card-small sm:card-large absolute left-0 top-0 -z-10 shrink-0 bg-auto bg-no-repeat"
+    >
+        <p>fake</p>
+    </div>
 </div>
 
 <style>

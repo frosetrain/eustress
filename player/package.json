@@ -33,6 +33,7 @@
     "type": "module",
     "dependencies": {
         "dataclass": "^2.1.1",
-        "mobile-drag-drop": "^3.0.0-rc.0"
+        "mobile-drag-drop": "^3.0.0-rc.0",
+        "motion": "^11.15.0"
     }
 }
