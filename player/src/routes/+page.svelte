@@ -1,12 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { websocket, joinKey } from "$lib/game.svelte";
+    import { websocket, joinKey, player } from "$lib/game.svelte";
 
     let value = $state("");
 
     function start() {
         websocket.onmessage = ({ data }) => {
             joinKey.value = Number(data);
+            player.value = 1;
             websocket.onmessage = null;
             goto(`/play`);
         };
@@ -17,6 +18,7 @@
         websocket.onmessage = ({ data }) => {
             if (data == "affirm") {
                 joinKey.value = Number(value);
+                player.value = 2;
                 websocket.onmessage = null;
                 goto(`/play`);
             }

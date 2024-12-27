@@ -2,10 +2,10 @@
     import { onMount } from "svelte";
     import { polyfill } from "mobile-drag-drop";
     import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
-    import { websocket, joinKey, gameState, SlotType, selected, CardSlot, moveCard, moving, gameOngoing, onAffirm } from "$lib/game.svelte";
-    import CardSlotComponent from "$lib/cardslot.svelte";
+    import { websocket, joinKey, gameState, SlotType, player, selected, moveCard, moving, gameOngoing, onAffirm } from "$lib/game.svelte";
+    import CardSlot from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
-    import { flip } from "svelte/animate";
+    import FakeCard from "$lib/fakecard.svelte";
 
     let newSelected = { slotType: 0, slotId: 0 };
 
@@ -36,19 +36,28 @@
         }
 
         if (selected.active && selected.slotType === newSelected.slotType && selected.slotId === newSelected.slotId) {
+            // if same card is selected again, deselect
             selected.active = false;
         } else if (!selected.active && newSelected.slotType !== SlotType.piles) {
+            // select a new card
             selected.active = true;
             updateSelected();
         } else if (selected.slotType === SlotType.playerDecks && newSelected.slotType === SlotType.playerStacks) {
+            // move card from deck to stack
             moveCard(selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = true;
             updateSelected();
         } else if (selected.slotType === SlotType.playerStacks && newSelected.slotType === SlotType.piles) {
+            // move card from stack to pile
+            moveCard(selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
+            selected.active = false;
+            updateSelected();
+        } else if (selected.slotType === SlotType.playerDecks && newSelected.slotType === SlotType.piles) {
             moveCard(selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = false;
             updateSelected();
         } else if (newSelected.slotType !== SlotType.piles) {
+            // if invalid, select the new selected card
             selected.active = true;
             updateSelected();
         } else {
@@ -89,12 +98,12 @@
                     });
                     break;
                 case "affirm":
-                    onAffirm.value();
-                    onAffirm.value = () => {};
+                    onAffirm.value(Number(args[1]), Number(args[2]), Number(args[3]));
+                    onAffirm.value = (arg1: number, arg2: number, arg3: number) => {};
                     break;
                 case "negative":
                     // show error
-                    onAffirm.value = () => {};
+                    onAffirm.value = (arg1: number, arg2: number, arg3: number) => {};
                     break;
                 case "move":
                     const [
@@ -110,8 +119,8 @@
                         opponentDeckCount,
                     ]: [number, number, number, number, number, number, number, number, number, number] = args.map((x: string) => Number(x));
                     // console.log(fromType, fromId, toType, toId, movedColor, movedNumber, replacementColor, replacementNumber, opponentDeckCount);
-                    const fromType = flipPlayer(fromTypeReal);
-                    const toType = flipPlayer(toTypeReal);
+                    const fromType = player.value === 2 ? flipPlayer(fromTypeReal) : fromTypeReal;
+                    const toType = player.value === 2 ? flipPlayer(toTypeReal) : toTypeReal;
                     const fromSlot = gameState[Object.keys(SlotType)[fromType]][fromId];
                     const toSlot = gameState[Object.keys(SlotType)[toType]][toId];
                     gameState[Object.keys(SlotType)[fromType]][fromId] = fromSlot.copy({
@@ -147,11 +156,11 @@
         <!-- Other stacks -->
         <div class="flex justify-between gap-1">
             {#each gameState.opponentDecks as card}
-                <CardSlotComponent {card} />
+                <CardSlot {card} />
             {/each}
-            <div class="flex gap-1 sm:gap-2">
+            <div class="flex flex-row-reverse gap-1 sm:gap-2">
                 {#each gameState.opponentStacks as card}
-                    <CardSlotComponent {card} />
+                    <CardSlot {card} />
                 {/each}
             </div>
         </div>
@@ -159,9 +168,9 @@
             <button id="amogus" class="my-auto rounded bg-orange-400 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25"
                 >STRESS <span class="font-normal">{joinKey.value}</span></button
             >
-            <div class="flex gap-1 sm:gap-2">
+            <div class:flex-row-reverse={player.value === 2} class="flex gap-1 sm:gap-2">
                 {#each gameState.piles as card}
-                    <CardSlotComponent {card} />
+                    <CardSlot {card} />
                 {/each}
             </div>
             <button class="my-auto rounded bg-orange-400 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
@@ -170,12 +179,13 @@
         <div class="flex justify-between gap-1">
             <div class="flex gap-1 sm:gap-2">
                 {#each gameState.playerStacks as card}
-                    <CardSlotComponent {card} />
+                    <CardSlot {card} />
                 {/each}
             </div>
             {#each gameState.playerDecks as card}
-                <CardSlotComponent {card} />
+                <CardSlot {card} />
             {/each}
         </div>
     </div>
 </div>
+<FakeCard />

@@ -16,7 +16,7 @@ async def start(websocket):
     """Start a new game."""
     game = StressGame()
     connected = OrderedSet([websocket])
-    join_key = randint(1000, 10000)
+    join_key = randint(1, 10)
     stress_games[join_key] = game, connected
     try:
         await websocket.send(str(join_key))
@@ -74,7 +74,7 @@ async def play(websocket, game, player, connected):
                 except ValueError:
                     await websocket.send("negative")
                     continue
-                await websocket.send("affirm")
+                await websocket.send(f"affirm {replacement_color} {replacement_number} {opponent_deck_count}")
                 await connected[2 - player].send(
                     f"move {from_type} {from_id} {to_type} {to_id} {moved_color} {moved_number} {replacement_color} {replacement_number} {opponent_deck_count}"
                 )

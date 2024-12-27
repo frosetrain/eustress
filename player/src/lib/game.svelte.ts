@@ -28,7 +28,8 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     if (
         !(
             (fromSlotType === SlotType.playerDecks && toSlotType === SlotType.playerStacks) ||
-            (fromSlotType === SlotType.playerStacks && toSlotType === SlotType.piles)
+            (fromSlotType === SlotType.playerStacks && toSlotType === SlotType.piles) ||
+            (fromSlotType === SlotType.playerDecks && toSlotType === SlotType.piles)
         )
     ) {
         return;
@@ -43,21 +44,36 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     moving.value = true;
     websocket.send(`move ${fromSlotType} ${fromSlotId} ${toSlotType} ${toSlotId} ${toSlot.number}`);
 
-    const showMove = () => {
+    const showMove = (replacementColor: number, replacementNumber: number, deckCount: number) => {
         // Update from slot
-        gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({ count: fromSlot.count - 1, canDrag: fromSlot.count > 1 });
+        gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({
+            color: replacementColor,
+            number: replacementNumber,
+            count: fromSlot.count - 1,
+            canDrag: fromSlot.count > 1,
+        });
+        gameState.playerDecks[0] = gameState.playerDecks[0].copy({
+            count: deckCount,
+        });
+        animation.playing = true;
 
         // Play animation
-        const fromFake = document.getElementById(`fake ${fromSlotType} ${fromSlotId}`)!;
-        const toFake = document.getElementById(`fake ${toSlotType} ${toSlotId}`)!;
-        fromFake.style.zIndex = "10";
-        const offsetX = toFake.getBoundingClientRect().x - fromFake.getBoundingClientRect().x;
-        const offsetY = toFake.getBoundingClientRect().y - fromFake.getBoundingClientRect().y;
-        const animation = animate(fromFake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
+        const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
+        const toBbox = document.getElementById(`${toSlotType} ${toSlotId}`)!.getBoundingClientRect();
+        const fake = document.getElementById("fake")!;
+        animation.fromX = fromBbox.left;
+        animation.fromY = fromBbox.top;
+        console.log(animation.fromX, animation.fromY);
+        const offsetX = toBbox.x - fromBbox.x;
+        const offsetY = toBbox.y - fromBbox.y;
+        const framerMotion = animate(fake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
+        animation.color = fromSlot.color;
+        animation.number = fromSlot.number;
+
         delay(() => {
             // Reset the animation to the start and hide fake
-            animation.cancel();
-            fromFake.style.zIndex = "-10";
+            framerMotion.cancel();
+            animation.playing = false;
 
             // Update to slot
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
@@ -74,12 +90,15 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     onAffirm.value = showMove;
 }
 
+// i should really put all these in a class
 export const moving = $state({ value: false }); // hack
 export const gameOngoing = $state({ value: false });
-export const onAffirm = $state({ value: () => {} });
+export const onAffirm = $state({ value: (arg1: number, arg2: number, arg3: number) => {} }); // eslint-disable-line
 export const websocket = new WebSocket("ws://localhost:8765");
 export const joinKey = $state({ value: 0 });
-export const selected: { active: boolean; slotType: number; slotId: number } = $state({ active: false, slotType: 0, slotId: 0 });
+export const player = $state({ value: 0 });
+export const selected = $state({ active: false, slotType: 0, slotId: 0 });
+export const animation = $state({ playing: false, color: 0, number: 0, fromX: 0, fromY: 0 });
 export const gameState: { [id: string]: CardSlot[] } = $state({
     playerStacks: [],
     opponentStacks: [],

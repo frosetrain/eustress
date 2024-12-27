@@ -44,12 +44,6 @@
             ondragover={(event) => dragover(event)}
         ></div>
     {/if}
-
-    <div
-        id={`fake ${card.type} ${card.id}`}
-        style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
-        class="card card-small sm:card-large absolute left-0 top-0 -z-10 shrink-0 bg-auto bg-no-repeat"
-    ></div>
 </div>
 
 <style>
