@@ -1,12 +1,13 @@
 """WebSocket server."""
 
-from asyncio import get_running_loop, run
+from asyncio import get_running_loop, run, sleep
 from random import randint
 
-from websockets.asyncio.server import serve
 from ordered_set import OrderedSet
+from websockets.asyncio.server import serve
+from websockets.exceptions import ConnectionClosedOK
 
-from game import StressGame, flip_player, SlotType
+from game import SlotType, StressGame, flip_player
 
 stress_games = {}
 
@@ -19,10 +20,11 @@ async def start(websocket):
     stress_games[join_key] = game, connected
     try:
         await websocket.send(str(join_key))
-        print("first player started game", join_key)
+        print("player 1 started game", join_key)
         await play(websocket, game, 1, connected)
     finally:
         del stress_games[join_key]
+        print("player 1 disconnected")
 
 
 async def join(websocket, join_key: int):
@@ -38,9 +40,10 @@ async def join(websocket, join_key: int):
         return
     connected.add(websocket)
     try:
-        print("second player joined game", join_key)
+        print("player 2 joined game", join_key)
         await websocket.send("affirm")
         # Send the card at the top of their pile to each player
+        await sleep(1)
         deck_top = game.state[SlotType.p1_decks][0][-1]
         await connected[0].send(f"begin {deck_top.color} {deck_top.number}")
         deck_top = game.state[SlotType.p2_decks][0][-1]
@@ -48,6 +51,7 @@ async def join(websocket, join_key: int):
         await play(websocket, game, 2, connected)
     finally:
         connected.remove(websocket)
+        print("player 2 disconnected")
 
 
 async def play(websocket, game, player, connected):
@@ -78,7 +82,12 @@ async def play(websocket, game, player, connected):
 
 async def handler(websocket):
     """Handle a new connecion."""
-    message = await websocket.recv()
+    print("connected")
+    try:
+        message = await websocket.recv()
+    except ConnectionClosedOK:
+        print("disconnected")
+        return
     args = message.split(" ")
     command = args[0]
     match command:

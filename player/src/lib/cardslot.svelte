@@ -1,6 +1,6 @@
 <script lang="ts">
     import { dragenter, dragover, dragstart, drop, dragleave } from "$lib/dragndrop.svelte";
-    import { selected, CardSlot } from "$lib/game.svelte";
+    import { selected, CardSlot, gameOngoing } from "$lib/game.svelte";
     let { card }: { card: CardSlot } = $props();
     const cardWidth = 2.25;
     const cardHeight = 3.5;
@@ -9,7 +9,7 @@
 <div
     id={`${card.type} ${card.id}`}
     class="relative"
-    draggable={card.canDrag ? true : false}
+    draggable={gameOngoing.value && card.canDrag ? true : false}
     ondragstart={(event) => dragstart(event)}
     onclick={() => console.log("clicked")}
 >
@@ -19,18 +19,16 @@
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
             class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"
         >
-            <p>{card.canDrag} {card.canDrop} {card.count}</p>
+            <p>{card.count}</p>
         </div>
     {:else if !card.flipped}
         <!-- Back of card -->
         <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat">
-            <p>{card.canDrag} {card.canDrop} {card.count}</p>
+            <p>{card.count}</p>
         </div>
     {:else}
         <!-- No card -->
-        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800">
-            <p>{card.canDrag} {card.canDrop} {card.count}</p>
-        </div>
+        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800"></div>
     {/if}
 
     {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}
@@ -51,9 +49,7 @@
         id={`fake ${card.type} ${card.id}`}
         style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
         class="card card-small sm:card-large absolute left-0 top-0 -z-10 shrink-0 bg-auto bg-no-repeat"
-    >
-        <p>fake</p>
-    </div>
+    ></div>
 </div>
 
 <style>

@@ -1,4 +1,4 @@
-import { moveCard, moving } from "$lib/game.svelte";
+import { moveCard, moving, gameOngoing } from "$lib/game.svelte";
 
 export function dragover(ev: DragEvent) {
     ev.preventDefault();
@@ -13,9 +13,9 @@ export function dragleave(ev: DragEvent) {
 }
 export function dragstart(ev: DragEvent) {
     ev.dataTransfer.setData("fromSlot", ev.target.id);
-    const img = new Image();
-    img.src = "/dragpointer.svg";
-    ev.dataTransfer.setDragImage(img, 16, 16);
+    // const img = new Image();
+    // img.src = "/dragpointer.svg";
+    // ev.dataTransfer.setDragImage(img, 16, 16);
 }
 export function drop(ev: DragEvent) {
     ev.preventDefault();
