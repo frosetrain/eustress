@@ -21,19 +21,12 @@ export class CardSlot extends Data {
 }
 
 const animationDuration = 0.2;
-export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotType: number, toSlotId: number) {
-    if (moving.value) {
+export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: number, toSlotType: number, toSlotId: number) {
+    console.log(opponent, fromSlotType, fromSlotId, toSlotType, toSlotId);
+    if (!opponent && moving.player) {
         return;
     }
-    if (
-        !(
-            (fromSlotType === SlotType.playerDecks && toSlotType === SlotType.playerStacks) ||
-            (fromSlotType === SlotType.playerStacks && toSlotType === SlotType.piles) ||
-            (fromSlotType === SlotType.playerDecks && toSlotType === SlotType.piles)
-        )
-    ) {
-        return;
-    }
+
     const fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
     const toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
     if (fromSlot.count <= 0) {
@@ -41,8 +34,10 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
     }
 
     // Send the move to the server
-    moving.value = true;
-    websocket.send(`move ${fromSlotType} ${fromSlotId} ${toSlotType} ${toSlotId} ${toSlot.number}`);
+    if (!opponent) {
+        moving.player = true;
+        websocket.send(`move ${fromSlotType} ${fromSlotId} ${toSlotType} ${toSlotId} ${toSlot.number}`);
+    }
 
     const showMove = (replacementColor: number, replacementNumber: number, deckCount: number) => {
         // Update from slot
@@ -52,28 +47,35 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
             count: fromSlot.count - 1,
             canDrag: fromSlot.count > 1,
         });
-        gameState.playerDecks[0] = gameState.playerDecks[0].copy({
-            count: deckCount,
-        });
-        animation.playing = true;
+        if (opponent) {
+            gameState.opponentDecks[0] = gameState.opponentDecks[0].copy({
+                count: deckCount,
+            });
+        } else {
+            gameState.playerDecks[0] = gameState.playerDecks[0].copy({
+                count: deckCount,
+            });
+        }
 
         // Play animation
         const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
         const toBbox = document.getElementById(`${toSlotType} ${toSlotId}`)!.getBoundingClientRect();
-        const fake = document.getElementById("fake")!;
-        animation.fromX = fromBbox.left;
-        animation.fromY = fromBbox.top;
-        console.log(animation.fromX, animation.fromY);
+        const fake = document.getElementById(`${opponent ? "opponent" : "player"}Fake`)!;
+
+        animation[opponent ? "opponent" : "player"].playing = true;
+        animation[opponent ? "opponent" : "player"].fromX = fromBbox.left;
+        animation[opponent ? "opponent" : "player"].fromY = fromBbox.top;
+        animation[opponent ? "opponent" : "player"].color = fromSlot.color;
+        animation[opponent ? "opponent" : "player"].number = fromSlot.number;
+
         const offsetX = toBbox.x - fromBbox.x;
         const offsetY = toBbox.y - fromBbox.y;
         const framerMotion = animate(fake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
-        animation.color = fromSlot.color;
-        animation.number = fromSlot.number;
 
         delay(() => {
             // Reset the animation to the start and hide fake
             framerMotion.cancel();
-            animation.playing = false;
+            animation[opponent ? "opponent" : "player"].playing = false;
 
             // Update to slot
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
@@ -84,21 +86,29 @@ export async function moveCard(fromSlotType: number, fromSlotId: number, toSlotT
                 canDrag: toSlot.type !== SlotType.piles,
             });
 
-            moving.value = false;
+            if (!opponent) moving.player = false;
         }, animationDuration);
     };
-    onAffirm.value = showMove;
+    if (opponent) {
+        return showMove;
+    } else {
+        onAffirm.value = showMove;
+    }
+    return () => {};
 }
 
 // i should really put all these in a class
-export const moving = $state({ value: false }); // hack
+export const moving = $state({ player: false });
 export const gameOngoing = $state({ value: false });
 export const onAffirm = $state({ value: (arg1: number, arg2: number, arg3: number) => {} }); // eslint-disable-line
 export const websocket = new WebSocket("ws://localhost:8765");
 export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
 export const selected = $state({ active: false, slotType: 0, slotId: 0 });
-export const animation = $state({ playing: false, color: 0, number: 0, fromX: 0, fromY: 0 });
+export const animation = $state({
+    player: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0 },
+    opponent: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0 },
+});
 export const gameState: { [id: string]: CardSlot[] } = $state({
     playerStacks: [],
     opponentStacks: [],

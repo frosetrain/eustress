@@ -29,5 +29,5 @@ export function drop(ev: DragEvent) {
     const fromSlotId = Number(fromSlotRaw[1]);
     const toSlotType = Number(toSlotRaw[0]);
     const toSlotId = Number(toSlotRaw[1]);
-    moveCard(fromSlotType, fromSlotId, toSlotType, toSlotId);
+    moveCard(false, fromSlotType, fromSlotId, toSlotType, toSlotId);
 }

@@ -15,7 +15,7 @@
     }
 
     function onKeyPress(event: KeyboardEvent) {
-        if (!gameOngoing.value || moving.value) {
+        if (!gameOngoing.value || moving.player) {
             return;
         }
         const stackKeys = "asdf";
@@ -35,33 +35,34 @@
             return;
         }
 
-        if (selected.active && selected.slotType === newSelected.slotType && selected.slotId === newSelected.slotId) {
+        if (!selected.active) {
+            if (newSelected.slotType !== SlotType.piles) {
+                // select a new card
+                selected.active = true;
+                updateSelected();
+            }
+        } else if (selected.slotType === newSelected.slotType && selected.slotId === newSelected.slotId) {
             // if same card is selected again, deselect
             selected.active = false;
-        } else if (!selected.active && newSelected.slotType !== SlotType.piles) {
-            // select a new card
-            selected.active = true;
-            updateSelected();
         } else if (selected.slotType === SlotType.playerDecks && newSelected.slotType === SlotType.playerStacks) {
             // move card from deck to stack
-            moveCard(selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
+            moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = true;
             updateSelected();
         } else if (selected.slotType === SlotType.playerStacks && newSelected.slotType === SlotType.piles) {
             // move card from stack to pile
-            moveCard(selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
+            moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = false;
             updateSelected();
         } else if (selected.slotType === SlotType.playerDecks && newSelected.slotType === SlotType.piles) {
-            moveCard(selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
+            // move card from deck to pile
+            moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = false;
             updateSelected();
-        } else if (newSelected.slotType !== SlotType.piles) {
+        } else {
             // if invalid, select the new selected card
             selected.active = true;
             updateSelected();
-        } else {
-            selected.active = false;
         }
     }
 
@@ -96,6 +97,10 @@
                         color: Number(args[1]),
                         number: Number(args[2]),
                     });
+                    gameState.opponentDecks[0] = gameState.opponentDecks[0].copy({
+                        color: Number(args[3]),
+                        number: Number(args[4]),
+                    });
                     break;
                 case "affirm":
                     onAffirm.value(Number(args[1]), Number(args[2]), Number(args[3]));
@@ -121,19 +126,8 @@
                     // console.log(fromType, fromId, toType, toId, movedColor, movedNumber, replacementColor, replacementNumber, opponentDeckCount);
                     const fromType = player.value === 2 ? flipPlayer(fromTypeReal) : fromTypeReal;
                     const toType = player.value === 2 ? flipPlayer(toTypeReal) : toTypeReal;
-                    const fromSlot = gameState[Object.keys(SlotType)[fromType]][fromId];
-                    const toSlot = gameState[Object.keys(SlotType)[toType]][toId];
-                    gameState[Object.keys(SlotType)[fromType]][fromId] = fromSlot.copy({
-                        count: fromSlot.count - 1,
-                        color: replacementColor,
-                        number: replacementNumber,
-                    });
-                    gameState[Object.keys(SlotType)[toType]][toId] = toSlot.copy({
-                        count: toSlot.count + 1,
-                        color: movedColor,
-                        number: movedNumber,
-                    });
-                    gameState.opponentDecks[0] = gameState.opponentDecks[0].copy({ count: opponentDeckCount });
+                    const showMove = moveCard(true, fromType, fromId, toType, toId)!;
+                    showMove(replacementColor, replacementNumber, opponentDeckCount);
                     break;
                 default:
                     console.log("invalid command from server");
@@ -188,4 +182,5 @@
         </div>
     </div>
 </div>
-<FakeCard />
+<FakeCard opponent={false} />
+<FakeCard opponent={true} />

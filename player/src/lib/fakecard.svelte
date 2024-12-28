@@ -1,14 +1,16 @@
 <script lang="ts">
     import { animation } from "$lib/game.svelte";
+    const { opponent } = $props();
     const cardWidth = 2.25;
     const cardHeight = 3.5;
 </script>
 
 <div
-    id="fake"
-    style="--card-x: {(animation.number - 1) * cardWidth}in; --card-y: {animation.color *
-        cardHeight}in; left: {animation.fromX}px; top: {animation.fromY}px;"
-    class:-z-10={!animation.playing}
+    id={`${opponent ? "opponent" : "player"}Fake`}
+    style="--card-x: {(animation[opponent ? 'opponent' : 'player'].number - 1) * cardWidth}in; --card-y: {animation[opponent ? 'opponent' : 'player']
+        .color * cardHeight}in; left: {animation[opponent ? 'opponent' : 'player'].fromX}px; top: {animation[opponent ? 'opponent' : 'player']
+        .fromY}px;"
+    class:-z-10={!animation[opponent ? "opponent" : "player"].playing}
     class="card card-small sm:card-large fixed shrink-0 bg-auto bg-no-repeat"
 >
     <p>fake</p>

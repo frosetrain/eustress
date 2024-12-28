@@ -44,10 +44,10 @@ async def join(websocket, join_key: int):
         await websocket.send("affirm")
         # Send the card at the top of their pile to each player
         await sleep(1)
-        deck_top = game.state[SlotType.p1_decks][0][-1]
-        await connected[0].send(f"begin {deck_top.color} {deck_top.number}")
-        deck_top = game.state[SlotType.p2_decks][0][-1]
-        await websocket.send(f"begin {deck_top.color} {deck_top.number}")
+        p1_deck_top = game.state[SlotType.p1_decks][0][-1]
+        p2_deck_top = game.state[SlotType.p2_decks][0][-1]
+        await connected[0].send(f"begin {p1_deck_top.color} {p1_deck_top.number} {p2_deck_top.color} {p2_deck_top.number}")
+        await websocket.send(f"begin {p2_deck_top.color} {p2_deck_top.number} {p1_deck_top.color} {p1_deck_top.number}")
         await play(websocket, game, 2, connected)
     finally:
         connected.remove(websocket)
