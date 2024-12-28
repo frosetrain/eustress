@@ -1,9 +1,15 @@
 <script lang="ts">
     import { dragenter, dragover, dragstart, drop, dragleave } from "$lib/dragndrop.svelte";
-    import { selected, CardSlot, gameOngoing } from "$lib/game.svelte";
+    import { selected, CardSlot, SlotType, gameOngoing, gameState } from "$lib/game.svelte";
     let { card }: { card: CardSlot } = $props();
     const cardWidth = 2.25;
     const cardHeight = 3.5;
+
+    function flipCard() {
+        if (card.type === SlotType.playerDecks) {
+            gameState[Object.keys(SlotType)[card.type]][card.id] = gameState[Object.keys(SlotType)[card.type]][card.id].copy({ flipped: true });
+        }
+    }
 </script>
 
 <div
@@ -11,16 +17,15 @@
     class="relative"
     draggable={gameOngoing.value && card.canDrag ? true : false}
     ondragstart={(event) => dragstart(event)}
-    onclick={() => console.log("clicked")}
+    onclick={flipCard}
 >
+    <!-- <p>{card.type} {card.id} {card.canDrag} {card.flipped}</p> -->
     {#if card.flipped && card.count > 0}
         <!-- Normal card -->
         <div
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
             class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"
-        >
-            <p>{card.count}</p>
-        </div>
+        ></div>
     {:else if !card.flipped}
         <!-- Back of card -->
         <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat">

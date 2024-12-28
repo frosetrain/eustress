@@ -32,6 +32,11 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
     if (fromSlot.count <= 0) {
         return;
     }
+    const diff = Math.abs(fromSlot.number - toSlot.number);
+    if (toSlot.type === SlotType.piles && !(diff === 1 || diff === 8) && !opponent) {
+        console.log(toSlot.type, diff, opponent);
+        return;
+    }
 
     // Send the move to the server
     if (!opponent) {
@@ -45,28 +50,24 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
             color: replacementColor,
             number: replacementNumber,
             count: fromSlot.count - 1,
-            canDrag: fromSlot.count > 1,
+            canDrag: !opponent && fromSlot.count > 1,
+            flipped: !(fromSlotType === SlotType.playerDecks || fromSlotType === SlotType.opponentDecks),
         });
-        if (opponent) {
-            gameState.opponentDecks[0] = gameState.opponentDecks[0].copy({
-                count: deckCount,
-            });
-        } else {
-            gameState.playerDecks[0] = gameState.playerDecks[0].copy({
-                count: deckCount,
-            });
-        }
+        gameState[opponent ? "opponentDecks" : "playerDecks"][0] = gameState[opponent ? "opponentDecks" : "playerDecks"][0].copy({
+            count: deckCount,
+        });
+        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: true });
 
         // Play animation
         const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
         const toBbox = document.getElementById(`${toSlotType} ${toSlotId}`)!.getBoundingClientRect();
         const fake = document.getElementById(`${opponent ? "opponent" : "player"}Fake`)!;
-
-        animation[opponent ? "opponent" : "player"].playing = true;
-        animation[opponent ? "opponent" : "player"].fromX = fromBbox.left;
-        animation[opponent ? "opponent" : "player"].fromY = fromBbox.top;
-        animation[opponent ? "opponent" : "player"].color = fromSlot.color;
-        animation[opponent ? "opponent" : "player"].number = fromSlot.number;
+        const anim = animation[opponent ? "opponent" : "player"];
+        anim.playing = true;
+        anim.fromX = fromBbox.left;
+        anim.fromY = fromBbox.top;
+        anim.color = fromSlot.color;
+        anim.number = fromSlot.number;
 
         const offsetX = toBbox.x - fromBbox.x;
         const offsetY = toBbox.y - fromBbox.y;
@@ -75,15 +76,15 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
         delay(() => {
             // Reset the animation to the start and hide fake
             framerMotion.cancel();
-            animation[opponent ? "opponent" : "player"].playing = false;
+            anim.playing = false;
 
             // Update to slot
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
                 color: fromSlot.color,
                 number: fromSlot.number,
-                flipped: fromSlot.flipped,
+                flipped: true,
                 count: toSlot.count + 1,
-                canDrag: toSlot.type !== SlotType.piles,
+                canDrag: !opponent && toSlot.type !== SlotType.piles,
             });
 
             if (!opponent) moving.player = false;
@@ -113,8 +114,8 @@ export const gameState: { [id: string]: CardSlot[] } = $state({
     playerStacks: [],
     opponentStacks: [],
     piles: [CardSlot.create({ id: 0, type: SlotType.piles, canDrop: true }), CardSlot.create({ id: 1, type: SlotType.piles, canDrop: true })],
-    playerDecks: [CardSlot.create({ id: 0, type: SlotType.playerDecks, color: 2, number: 3, count: 36, canDrag: true })],
-    opponentDecks: [CardSlot.create({ id: 0, type: SlotType.opponentDecks, color: 2, number: 3, count: 36 })],
+    playerDecks: [CardSlot.create({ id: 0, type: SlotType.playerDecks, color: 2, number: 3, count: 36, flipped: false, canDrag: true })],
+    opponentDecks: [CardSlot.create({ id: 0, type: SlotType.opponentDecks, color: 2, number: 3, count: 36, flipped: false })],
 });
 for (let i = 0; i < 4; ++i) {
     gameState.playerStacks.push(CardSlot.create({ id: i, type: SlotType.playerStacks, canDrop: true }));

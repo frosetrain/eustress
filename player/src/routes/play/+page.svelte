@@ -49,13 +49,12 @@
             moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = true;
             updateSelected();
-        } else if (selected.slotType === SlotType.playerStacks && newSelected.slotType === SlotType.piles) {
+        } else if (
+            newSelected.slotType === SlotType.piles &&
+            (selected.slotType === SlotType.playerStacks || selected.slotType === SlotType.playerDecks)
+        ) {
             // move card from stack to pile
-            moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
-            selected.active = false;
-            updateSelected();
-        } else if (selected.slotType === SlotType.playerDecks && newSelected.slotType === SlotType.piles) {
-            // move card from deck to pile
+            // check number
             moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
             selected.active = false;
             updateSelected();
@@ -144,6 +143,7 @@
 <svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
 
 <div class="flex min-h-dvh justify-center bg-amber-100 dark:bg-gray-900">
+    <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
     <div
         class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-700 p-2 shadow-lg shadow-orange-600 ring-4 ring-orange-600/60 sm:m-8 sm:rounded-lg sm:p-4"
     >
