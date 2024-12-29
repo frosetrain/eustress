@@ -32,9 +32,15 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
     if (fromSlot.count <= 0) {
         return;
     }
+
+    // When moving to piles, make sure it's one higher or lower
     const diff = Math.abs(fromSlot.number - toSlot.number);
     if (toSlot.type === SlotType.piles && !(diff === 1 || diff === 8) && !opponent) {
-        console.log(toSlot.type, diff, opponent);
+        return;
+    }
+
+    // When moving to stacks, make sure it's the same number
+    if (toSlot.type === SlotType.playerStacks && toSlot.number !== 0 && fromSlot.number !== toSlot.number) {
         return;
     }
 

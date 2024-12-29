@@ -10,6 +10,12 @@
     let newSelected = { slotType: 0, slotId: 0 };
 
     function updateSelected() {
+        if (newSelected.slotType === SlotType.playerDecks) {
+            if (gameState.playerStacks.every((x) => x.count > 0)) {
+                return;
+            }
+            gameState.playerDecks[0] = gameState.playerDecks[0].copy({ flipped: true });
+        }
         selected.slotType = newSelected.slotType;
         selected.slotId = newSelected.slotId;
     }

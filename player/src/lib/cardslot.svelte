@@ -7,6 +7,9 @@
 
     function flipCard() {
         if (card.type === SlotType.playerDecks) {
+            if (gameState.playerStacks.every((x) => x.count > 0)) {
+                return;
+            }
             gameState[Object.keys(SlotType)[card.type]][card.id] = gameState[Object.keys(SlotType)[card.type]][card.id].copy({ flipped: true });
         }
     }
@@ -26,14 +29,12 @@
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
             class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"
         ></div>
-    {:else if !card.flipped}
-        <!-- Back of card -->
-        <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat">
-            <p>{card.count}</p>
-        </div>
-    {:else}
+    {:else if card.count < 1}
         <!-- No card -->
         <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800"></div>
+    {:else}
+        <!-- Back of card -->
+        <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"></div>
     {/if}
 
     {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}
