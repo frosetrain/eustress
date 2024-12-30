@@ -6,6 +6,7 @@
     const cardHeight = 3.5;
 
     function flipCard() {
+        if (!gameSetup.value) return;
         if (card.type === SlotType.playerDecks) {
             if (gameState.playerStacks.every((x) => x.count > 0)) {
                 return;
@@ -22,6 +23,7 @@
     ondragstart={(event) => dragstart(event)}
     onclick={flipCard}
 >
+    {card.count}
     <!-- <p>{card.type} {card.id} {card.canDrag} {card.flipped}</p> -->
     {#if card.flipped && card.count > 0}
         <!-- Normal card -->
@@ -34,7 +36,9 @@
         <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800"></div>
     {:else}
         <!-- Back of card -->
-        <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"></div>
+        <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat">
+            <p>{card.color} {card.number}</p>
+        </div>
     {/if}
 
     {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}

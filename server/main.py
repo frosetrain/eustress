@@ -64,7 +64,8 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
             case "ready":
                 game.ready[player - 1] = True
                 if all(game.ready):
-                    broadcast(connected, "begin")
+                    await deck_to_pile(game, connected, "begin", 0)
+                    print(game.state[SlotType.piles])
             case "move":
                 from_type, from_id, to_type, to_id, to_number = map(int, args[1:])
                 if player == 2:
@@ -72,9 +73,11 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                     to_type = flip_player(to_type)
                 print(from_type, from_id, to_type, to_id, to_number)
                 try:
-                    moved_color, moved_number, replacement_color, replacement_number, opponent_deck_count = game.move(
-                        from_type, from_id, to_type, to_id, to_number, player
-                    )
+                    move_result = game.move(from_type, from_id, to_type, to_id, to_number, player)
+                    if move_result is None:
+                        await websocket.send("negative")
+                        continue
+                    moved_color, moved_number, replacement_color, replacement_number, opponent_deck_count = move_result
                 except ValueError:
                     await websocket.send("negative")
                     continue
@@ -82,6 +85,36 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                 await connected[2 - player].send(
                     f"move {from_type} {from_id} {to_type} {to_id} {moved_color} {moved_number} {replacement_color} {replacement_number} {opponent_deck_count}"
                 )
+                sleep(0.25)
+                stucked = game.stuck()
+                if stucked[0]:
+                    await deck_to_pile(game, connected, "stuck", stucked[1])
+
+
+async def deck_to_pile(game: StressGame, connected: OrderedSet[ServerConnection], command: str, dative: int) -> None:
+    # dative: 0: both put, 1: player 1 puts both, 2: player 2 puts both
+    repeats = dative_repeat(dative)
+    steps: list[tuple[int, int]] = []
+    for i in range(repeats[0]):
+        _, _, new_color, new_number, _ = game.move(SlotType.p1_decks, 0, SlotType.piles, i, -1, 1)
+        steps.append((new_color, new_number))
+    for i in range(repeats[1]):
+        _, _, new_color, new_number, _ = game.move(SlotType.p2_decks, 0, SlotType.piles, i + repeats[0], -1, 2)
+        steps.append((new_color, new_number))
+    message = f"{command} {dative} {steps[0][0]} {steps[0][1]} {steps[1][0]} {steps[1][1]}"
+    print(message)
+    broadcast(connected, message)
+
+
+def dative_repeat(dative: int) -> tuple[int, int]:
+    """Dative."""
+    match dative:
+        case 0:
+            return (1, 1)
+        case 1:
+            return (2, 0)
+        case 2:
+            return (0, 2)
 
 
 async def handler(websocket: ServerConnection) -> None:

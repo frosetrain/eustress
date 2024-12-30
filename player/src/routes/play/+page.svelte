@@ -2,7 +2,20 @@
     import { onMount } from "svelte";
     import { polyfill } from "mobile-drag-drop";
     import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
-    import { websocket, joinKey, gameState, SlotType, player, selected, moveCard, moving, gameSetup, gameStarted, onAffirm } from "$lib/game.svelte";
+    import {
+        websocket,
+        joinKey,
+        gameState,
+        SlotType,
+        player,
+        selected,
+        moveCard,
+        moving,
+        animation,
+        gameSetup,
+        gameStarted,
+        onAffirm,
+    } from "$lib/game.svelte";
     import CardSlot from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
@@ -50,6 +63,15 @@
         } else if (selected.slotType === newSelected.slotType && selected.slotId === newSelected.slotId) {
             // if same card is selected again, deselect
             selected.active = false;
+        } else if (
+            selected.slotType === newSelected.slotType &&
+            selected.slotType === SlotType.playerStacks &&
+            gameState.playerStacks[selected.slotId].number === gameState.playerStacks[newSelected.slotId].number
+        ) {
+            // move card from stack to stack (if number is the same)
+            moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
+            selected.active = true;
+            updateSelected();
         } else if (selected.slotType === SlotType.playerDecks && newSelected.slotType === SlotType.playerStacks) {
             // move card from deck to stack
             moveCard(false, selected.slotType, selected.slotId, newSelected.slotType, newSelected.slotId);
@@ -107,8 +129,16 @@
                         number: Number(args[4]),
                     });
                     break;
-                case "begin":
+                case "begin": // TODO
                     gameStarted.value = true;
+                    // Move the top card in each deck to a pile
+                    moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(Number(args[2]), Number(args[3]));
+                    moveCard(false, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
+                    break;
+                case "stuck": // TODO
+                    moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(Number(args[2]), Number(args[3]));
+                    moveCard(false, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
+                    break;
                 case "affirm":
                     onAffirm.value(Number(args[1]), Number(args[2]), Number(args[3]));
                     onAffirm.value = (arg1: number, arg2: number, arg3: number) => {};
@@ -151,11 +181,12 @@
 <svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
 
 <div class="flex min-h-dvh justify-center bg-amber-100 dark:bg-gray-900">
-    <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
-    <p>{gameStarted.value}</p>
     <div
         class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-700 p-2 shadow-lg shadow-orange-600 ring-4 ring-orange-600/60 sm:m-8 sm:rounded-lg sm:p-4"
     >
+        <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
+        <p class="text-white">gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player}</p>
+        <p class="text-white">{animation.player.playing} {animation.opponent.playing}</p>
         <!-- Other stacks -->
         <div class="flex justify-between gap-1">
             {#each gameState.opponentDecks as card}

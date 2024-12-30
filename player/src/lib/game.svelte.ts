@@ -30,16 +30,19 @@ export function moveCard(
     revolution: boolean = false,
 ) {
     console.log(opponent, fromSlotType, fromSlotId, toSlotType, toSlotId);
-    if (!opponent && moving.player) {
+    if (!opponent && moving.player && !revolution) {
+        console.log("moveCard returned: player moving");
         return;
     }
     if (!opponent && !gameStarted.value && toSlotType === SlotType.piles) {
+        console.log("moveCard returned: moved to pile before game started");
         return;
     }
 
     const fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
     const toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
     if (fromSlot.count <= 0) {
+        console.log("moveCard returned: fromSlot count <= 0");
         return;
     }
     if (!opponent && !fromSlot.flipped && !revolution) {
@@ -49,22 +52,28 @@ export function moveCard(
 
     // When moving to piles, make sure it's one higher or lower
     const diff = Math.abs(fromSlot.number - toSlot.number);
-    if (toSlot.type === SlotType.piles && !(diff === 1 || diff === 8) && !opponent) {
+    if (toSlot.type === SlotType.piles && !(diff === 1 || diff === 8) && !opponent && !revolution) {
+        console.log("moveCard returned: number is not valid");
         return;
     }
 
     // When moving to stacks, make sure it's the same number
     if (toSlot.type === SlotType.playerStacks && toSlot.number !== 0 && fromSlot.number !== toSlot.number) {
+        console.log("moveCard returned: number does not match");
         return;
     }
 
     // Send the move to the server
-    if (!opponent) {
-        moving.player = true;
+    if (!opponent && !revolution) {
         websocket.send(`move ${fromSlotType} ${fromSlotId} ${toSlotType} ${toSlotId} ${toSlot.number}`);
     }
 
-    const showMove = (replacementColor: number, replacementNumber: number, deckCount: number) => {
+    const showMove = (replacementColor: number, replacementNumber: number, deckCount: number | null = null) => {
+        console.log(replacementColor, replacementNumber, deckCount);
+        if (!opponent) {
+            moving.player = true;
+        }
+
         // Update from slot
         gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({
             color: replacementColor,
@@ -73,21 +82,24 @@ export function moveCard(
             canDrag: !opponent && fromSlot.count > 1,
             flipped: !revolution && !(fromSlotType === SlotType.playerDecks || fromSlotType === SlotType.opponentDecks),
         });
-        gameState[opponent ? "opponentDecks" : "playerDecks"][0] = gameState[opponent ? "opponentDecks" : "playerDecks"][0].copy({
-            count: deckCount,
-        });
+        if (deckCount !== null) {
+            gameState[opponent ? "opponentDecks" : "playerDecks"][0] = gameState[opponent ? "opponentDecks" : "playerDecks"][0].copy({
+                count: deckCount,
+            });
+        }
         gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution });
 
         // Play animation
         const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
         const toBbox = document.getElementById(`${toSlotType} ${toSlotId}`)!.getBoundingClientRect();
-        const fake = document.getElementById(`${opponent ? "opponent" : "player"}Fake`)!;
+        const fake = document.getElementById(`${opponent ? "opponent" : "player"}${revolution ? "Unflip" : "Flip"}Fake`)!;
         const anim = animation[opponent ? "opponent" : "player"];
         anim.playing = true;
         anim.fromX = fromBbox.left;
         anim.fromY = fromBbox.top;
         anim.color = fromSlot.color;
         anim.number = fromSlot.number;
+        anim.flipped = !revolution;
 
         const offsetX = toBbox.x - fromBbox.x;
         const offsetY = toBbox.y - fromBbox.y;
@@ -102,7 +114,7 @@ export function moveCard(
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
                 color: fromSlot.color,
                 number: fromSlot.number,
-                flipped: !revolution,
+                flipped: true,
                 count: toSlot.count + 1,
                 canDrag: !opponent && toSlot.type !== SlotType.piles,
             });
@@ -115,7 +127,7 @@ export function moveCard(
             if (!opponent) moving.player = false;
         }, animationDuration);
     };
-    if (opponent) {
+    if (opponent || revolution) {
         return showMove;
     } else {
         onAffirm.value = showMove;
@@ -133,8 +145,8 @@ export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
 export const selected = $state({ active: false, slotType: 0, slotId: 0 });
 export const animation = $state({
-    player: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0 },
-    opponent: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0 },
+    player: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
+    opponent: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
 });
 export const gameState: { [id: string]: CardSlot[] } = $state({
     playerStacks: [],
