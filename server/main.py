@@ -4,7 +4,7 @@ from asyncio import get_running_loop, run, sleep
 from random import randint
 
 from ordered_set import OrderedSet
-from websockets.asyncio.server import serve
+from websockets.asyncio.server import ServerConnection, serve, broadcast
 from websockets.exceptions import ConnectionClosedOK
 
 from game import SlotType, StressGame, flip_player
@@ -12,7 +12,7 @@ from game import SlotType, StressGame, flip_player
 stress_games = {}
 
 
-async def start(websocket):
+async def start(websocket: ServerConnection) -> None:
     """Start a new game."""
     game = StressGame()
     connected = OrderedSet([websocket])
@@ -27,7 +27,7 @@ async def start(websocket):
         print("player 1 disconnected")
 
 
-async def join(websocket, join_key: int):
+async def join(websocket: ServerConnection, join_key: int) -> None:
     """Join an existing game."""
     try:
         game, connected = stress_games[join_key]
@@ -46,21 +46,25 @@ async def join(websocket, join_key: int):
         await sleep(1)
         p1_deck_top = game.state[SlotType.p1_decks][0][-1]
         p2_deck_top = game.state[SlotType.p2_decks][0][-1]
-        await connected[0].send(f"begin {p1_deck_top.color} {p1_deck_top.number} {p2_deck_top.color} {p2_deck_top.number}")
-        await websocket.send(f"begin {p2_deck_top.color} {p2_deck_top.number} {p1_deck_top.color} {p1_deck_top.number}")
+        await connected[0].send(f"setup {p1_deck_top.color} {p1_deck_top.number} {p2_deck_top.color} {p2_deck_top.number}")
+        await websocket.send(f"setup {p2_deck_top.color} {p2_deck_top.number} {p1_deck_top.color} {p1_deck_top.number}")
         await play(websocket, game, 2, connected)
     finally:
         connected.remove(websocket)
         print("player 2 disconnected")
 
 
-async def play(websocket, game, player, connected):
+async def play(websocket: ServerConnection, game: StressGame, player: int, connected: OrderedSet[ServerConnection]) -> None:
     """Main game loop."""
     async for message in websocket:
         print(f"{player}<<{message}")
         args = message.split(" ")
         command = args[0]
         match command:
+            case "ready":
+                game.ready[player - 1] = True
+                if all(game.ready):
+                    broadcast(connected, "begin")
             case "move":
                 from_type, from_id, to_type, to_id, to_number = map(int, args[1:])
                 if player == 2:
@@ -80,7 +84,7 @@ async def play(websocket, game, player, connected):
                 )
 
 
-async def handler(websocket):
+async def handler(websocket: ServerConnection) -> None:
     """Handle a new connecion."""
     print("connected")
     try:

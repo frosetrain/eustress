@@ -14,24 +14,3 @@
 >
     <p>fake</p>
 </div>
-
-<style>
-    @tailwind components;
-    @layer components {
-        .card {
-            background-image: url("/eustress_deck.svg");
-        }
-        .card-small {
-            width: 0.675in;
-            height: 1.05in;
-            background-size: 6.75in 4.2in;
-            background-position: calc(var(--card-x) * -0.3) calc(var(--card-y) * -0.3);
-        }
-        .card-large {
-            width: 1.125in;
-            height: 1.75in;
-            background-size: 11.25in 7in;
-            background-position: calc(var(--card-x) * -0.5) calc(var(--card-y) * -0.5);
-        }
-    }
-</style>

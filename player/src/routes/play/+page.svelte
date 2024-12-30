@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { polyfill } from "mobile-drag-drop";
     import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
-    import { websocket, joinKey, gameState, SlotType, player, selected, moveCard, moving, gameOngoing, onAffirm } from "$lib/game.svelte";
+    import { websocket, joinKey, gameState, SlotType, player, selected, moveCard, moving, gameSetup, gameStarted, onAffirm } from "$lib/game.svelte";
     import CardSlot from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
@@ -21,11 +21,11 @@
     }
 
     function onKeyPress(event: KeyboardEvent) {
-        if (!gameOngoing.value || moving.player) {
+        if (!gameSetup.value || moving.player) {
             return;
         }
         const stackKeys = "asdf";
-        const pileKeys = "jk";
+        const pileKeys = player.value === 1 ? "jk" : "kj";
         const deckKey = "n";
 
         if (pileKeys.includes(event.key)) {
@@ -96,8 +96,8 @@
             const args = data.split(" ");
             const command = args[0];
             switch (command) {
-                case "begin":
-                    gameOngoing.value = true;
+                case "setup":
+                    gameSetup.value = true;
                     gameState.playerDecks[0] = gameState.playerDecks[0].copy({
                         color: Number(args[1]),
                         number: Number(args[2]),
@@ -107,6 +107,8 @@
                         number: Number(args[4]),
                     });
                     break;
+                case "begin":
+                    gameStarted.value = true;
                 case "affirm":
                     onAffirm.value(Number(args[1]), Number(args[2]), Number(args[3]));
                     onAffirm.value = (arg1: number, arg2: number, arg3: number) => {};
@@ -150,6 +152,7 @@
 
 <div class="flex min-h-dvh justify-center bg-amber-100 dark:bg-gray-900">
     <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
+    <p>{gameStarted.value}</p>
     <div
         class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-700 p-2 shadow-lg shadow-orange-600 ring-4 ring-orange-600/60 sm:m-8 sm:rounded-lg sm:p-4"
     >

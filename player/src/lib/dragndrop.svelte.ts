@@ -1,4 +1,4 @@
-import { moveCard, moving, gameOngoing } from "$lib/game.svelte";
+import { moveCard, moving } from "$lib/game.svelte";
 
 export function dragover(ev: DragEvent) {
     ev.preventDefault();

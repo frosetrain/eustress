@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import IntEnum
 from itertools import product
 from random import shuffle
 
@@ -27,6 +27,7 @@ class StressGame:
             SlotType.p1_decks: [[]],
             SlotType.p2_decks: [[]],
         }
+        self.ready = [False, False]
 
         # Put random cards in decks
         cards = []

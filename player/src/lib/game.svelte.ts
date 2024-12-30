@@ -21,15 +21,29 @@ export class CardSlot extends Data {
 }
 
 const animationDuration = 0.2;
-export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: number, toSlotType: number, toSlotId: number) {
+export function moveCard(
+    opponent: boolean,
+    fromSlotType: number,
+    fromSlotId: number,
+    toSlotType: number,
+    toSlotId: number,
+    revolution: boolean = false,
+) {
     console.log(opponent, fromSlotType, fromSlotId, toSlotType, toSlotId);
     if (!opponent && moving.player) {
+        return;
+    }
+    if (!opponent && !gameStarted.value && toSlotType === SlotType.piles) {
         return;
     }
 
     const fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
     const toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
     if (fromSlot.count <= 0) {
+        return;
+    }
+    if (!opponent && !fromSlot.flipped && !revolution) {
+        console.log("not flipped");
         return;
     }
 
@@ -57,12 +71,12 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
             number: replacementNumber,
             count: fromSlot.count - 1,
             canDrag: !opponent && fromSlot.count > 1,
-            flipped: !(fromSlotType === SlotType.playerDecks || fromSlotType === SlotType.opponentDecks),
+            flipped: !revolution && !(fromSlotType === SlotType.playerDecks || fromSlotType === SlotType.opponentDecks),
         });
         gameState[opponent ? "opponentDecks" : "playerDecks"][0] = gameState[opponent ? "opponentDecks" : "playerDecks"][0].copy({
             count: deckCount,
         });
-        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: true });
+        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution });
 
         // Play animation
         const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
@@ -88,10 +102,15 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
                 color: fromSlot.color,
                 number: fromSlot.number,
-                flipped: true,
+                flipped: !revolution,
                 count: toSlot.count + 1,
                 canDrag: !opponent && toSlot.type !== SlotType.piles,
             });
+
+            // If not started and all piles are filled, be ready
+            if (!opponent && !gameStarted.value && gameState.playerStacks.every((x) => x.count > 0)) {
+                websocket.send("ready");
+            }
 
             if (!opponent) moving.player = false;
         }, animationDuration);
@@ -106,7 +125,8 @@ export function moveCard(opponent: boolean, fromSlotType: number, fromSlotId: nu
 
 // i should really put all these in a class
 export const moving = $state({ player: false });
-export const gameOngoing = $state({ value: false });
+export const gameSetup = $state({ value: false });
+export const gameStarted = $state({ value: false });
 export const onAffirm = $state({ value: (arg1: number, arg2: number, arg3: number) => {} }); // eslint-disable-line
 export const websocket = new WebSocket("ws://localhost:8765");
 export const joinKey = $state({ value: 0 });
