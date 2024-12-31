@@ -136,7 +136,7 @@ async def handler(websocket: ServerConnection) -> None:
 
 async def main():
     """Main loop."""
-    async with serve(handler, "localhost", 8765):
+    async with serve(handler, "0.0.0.0", 8765):
         await get_running_loop().create_future()  # run forever
 
 

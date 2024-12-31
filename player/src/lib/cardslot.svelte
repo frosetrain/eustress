@@ -23,21 +23,28 @@
     ondragstart={(event) => dragstart(event)}
     onclick={flipCard}
 >
-    {card.count}
     <!-- <p>{card.type} {card.id} {card.canDrag} {card.flipped}</p> -->
     {#if card.flipped && card.count > 0}
         <!-- Normal card -->
         <div
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
-            class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat"
-        ></div>
+            class="card card-small sm:card-large shrink-0 bg-no-repeat"
+        >
+            {card.count}
+        </div>
     {:else if card.count < 1}
         <!-- No card -->
-        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800"></div>
+        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800">
+            {card.count}
+        </div>
     {:else}
         <!-- Back of card -->
-        <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-auto bg-no-repeat">
-            <p>{card.color} {card.number}</p>
+        <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-no-repeat">
+            <p>
+                {card.color}
+                {card.number}
+                {card.count}
+            </p>
         </div>
     {/if}
 

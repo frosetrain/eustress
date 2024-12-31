@@ -185,8 +185,10 @@
         class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-700 p-2 shadow-lg shadow-orange-600 ring-4 ring-orange-600/60 sm:m-8 sm:rounded-lg sm:p-4"
     >
         <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
-        <p class="text-white">gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player}</p>
-        <p class="text-white">{animation.player.playing} {animation.opponent.playing}</p>
+        <p class="text-white">
+            gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player} animation.player {animation.player.playing} animation.opponent
+            {animation.opponent.playing}
+        </p>
         <!-- Other stacks -->
         <div class="flex justify-between gap-1">
             {#each gameState.opponentDecks as card}
