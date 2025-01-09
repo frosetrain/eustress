@@ -4,7 +4,7 @@ from asyncio import get_running_loop, run, sleep
 from random import randint
 
 from ordered_set import OrderedSet
-from websockets.asyncio.server import ServerConnection, serve, broadcast
+from websockets.asyncio.server import ServerConnection, broadcast, serve
 from websockets.exceptions import ConnectionClosedOK
 
 from game import SlotType, StressGame, flip_player
@@ -85,10 +85,13 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                 await connected[2 - player].send(
                     f"move {from_type} {from_id} {to_type} {to_id} {moved_color} {moved_number} {replacement_color} {replacement_number} {opponent_deck_count}"
                 )
-                sleep(0.25)
                 stucked = game.stuck()
-                if stucked[0]:
+                # stucked = (True, 0)  # FIXME
+                while stucked[0]:
+                    await sleep(1.5)
                     await deck_to_pile(game, connected, "stuck", stucked[1])
+                    stucked = game.stuck()
+                    await sleep(0.69)
 
 
 async def deck_to_pile(game: StressGame, connected: OrderedSet[ServerConnection], command: str, dative: int) -> None:

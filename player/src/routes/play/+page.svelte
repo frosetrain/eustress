@@ -19,6 +19,7 @@
     import CardSlot from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
+    import { delay } from "motion";
 
     let newSelected = { slotType: 0, slotId: 0 };
 
@@ -129,15 +130,54 @@
                         number: Number(args[4]),
                     });
                     break;
-                case "begin": // TODO
+                case "begin":
                     gameStarted.value = true;
                     // Move the top card in each deck to a pile
+                    if (player.value == 2) {
+                        [args[2], args[3], args[4], args[5]] = [args[4], args[5], args[2], args[3]];
+                    }
                     moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(Number(args[2]), Number(args[3]));
-                    moveCard(false, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
+                    moveCard(true, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
                     break;
                 case "stuck": // TODO
-                    moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(Number(args[2]), Number(args[3]));
-                    moveCard(false, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
+                    switch (Number(args[1])) {
+                        case 0:
+                            if (player.value == 2) {
+                                [args[2], args[3], args[4], args[5]] = [args[4], args[5], args[2], args[3]];
+                            }
+                            console.log("stuck 0");
+                            moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(
+                                Number(args[2]),
+                                Number(args[3]),
+                            );
+                            moveCard(true, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(
+                                Number(args[4]),
+                                Number(args[5]),
+                            );
+                            break;
+                        case 1:
+                            console.log("stuck 1");
+                            moveCard(false, player.value === 1 ? SlotType.playerDecks : SlotType.opponentDecks, 0, SlotType.piles, 0, true)!(
+                                Number(args[2]),
+                                Number(args[3]),
+                            );
+                            moveCard(true, player.value === 1 ? SlotType.playerDecks : SlotType.opponentDecks, 0, SlotType.piles, 1, true)!(
+                                Number(args[4]),
+                                Number(args[5]),
+                            );
+                            break;
+                        case 2:
+                            console.log("stuck 2");
+                            moveCard(false, player.value === 1 ? SlotType.opponentDecks : SlotType.playerDecks, 0, SlotType.piles, 0, true)!(
+                                Number(args[2]),
+                                Number(args[3]),
+                            );
+                            moveCard(true, player.value === 1 ? SlotType.opponentDecks : SlotType.playerDecks, 0, SlotType.piles, 1, true)!(
+                                Number(args[4]),
+                                Number(args[5]),
+                            );
+                            break;
+                    }
                     break;
                 case "affirm":
                     onAffirm.value(Number(args[1]), Number(args[2]), Number(args[3]));
@@ -180,15 +220,15 @@
 
 <svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
 
-<div class="flex min-h-dvh justify-center bg-amber-100 dark:bg-gray-900">
+<div class="flex min-h-dvh justify-center bg-gray-100 dark:bg-gray-900">
     <div
-        class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-700 p-2 shadow-lg shadow-orange-600 ring-4 ring-orange-600/60 sm:m-8 sm:rounded-lg sm:p-4"
+        class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-200 p-2 shadow-lg shadow-orange-400 ring-4 ring-orange-500/80 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-gray-800"
     >
         <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
-        <p class="text-white">
+        <!-- <p class="text-white">
             gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player} animation.player {animation.player.playing} animation.opponent
             {animation.opponent.playing}
-        </p>
+        </p> -->
         <!-- Other stacks -->
         <div class="flex justify-between gap-1">
             {#each gameState.opponentDecks as card}
@@ -201,7 +241,7 @@
             </div>
         </div>
         <div class="flex justify-evenly">
-            <button id="amogus" class="my-auto rounded bg-orange-400 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25"
+            <button id="amogus" class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25"
                 >STRESS <span class="font-normal">{joinKey.value}</span></button
             >
             <div class:flex-row-reverse={player.value === 2} class="flex gap-1 sm:gap-2">
@@ -209,10 +249,10 @@
                     <CardSlot {card} />
                 {/each}
             </div>
-            <button class="my-auto rounded bg-orange-400 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
+            <button class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
         </div>
         <!-- Player stacks -->
-        <div class="flex justify-between gap-1">
+        <div class="flex justify-between gap-1 rounded-lg bg-orange-300 p-1.5 sm:rounded-2xl sm:p-3 dark:bg-orange-800">
             <div class="flex gap-1 sm:gap-2">
                 {#each gameState.playerStacks as card}
                     <CardSlot {card} />

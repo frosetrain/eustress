@@ -87,7 +87,7 @@ export function moveCard(
                 count: deckCount,
             });
         }
-        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution });
+        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution && toSlot.number !== 0 }); // TODO
 
         // Play animation
         const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
@@ -114,10 +114,18 @@ export function moveCard(
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
                 color: fromSlot.color,
                 number: fromSlot.number,
-                flipped: true,
+                flipped: !revolution,
                 count: toSlot.count + 1,
                 canDrag: !opponent && toSlot.type !== SlotType.piles,
             });
+
+            if (revolution) {
+                delay(() => {
+                    gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = gameState[Object.keys(SlotType)[toSlotType]][toSlotId].copy({
+                        flipped: true,
+                    });
+                }, 1);
+            }
 
             // If not started and all piles are filled, be ready
             if (!opponent && !gameStarted.value && gameState.playerStacks.every((x) => x.count > 0)) {

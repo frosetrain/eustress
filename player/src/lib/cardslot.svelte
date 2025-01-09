@@ -34,7 +34,7 @@
         </div>
     {:else if card.count < 1}
         <!-- No card -->
-        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-800">
+        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-900">
             {card.count}
         </div>
     {:else}
