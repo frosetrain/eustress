@@ -166,12 +166,11 @@
                     }
                     break;
                 case "affirm":
-                    onAffirm.value(Number(args[1]), Number(args[2]), Number(args[3]));
-                    onAffirm.value = (arg1: number, arg2: number, arg3: number) => {};
+                    onAffirm.queue.shift()!(Number(args[1]), Number(args[2]), Number(args[3]));
                     break;
                 case "negative":
                     // show error
-                    onAffirm.value = (arg1: number, arg2: number, arg3: number) => {};
+                    onAffirm.queue.shift();
                     break;
                 case "move":
                     const [
@@ -213,6 +212,7 @@
             gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player} animation.player {animation.player.playing} animation.opponent
             {animation.opponent.playing}
         </p> -->
+        <!-- <p class="text-white">{onAffirm.queue.length}</p> -->
         <!-- Other stacks -->
         <div class="flex justify-between gap-1 rounded-lg p-1.5 sm:rounded-2xl sm:p-3">
             {#each gameState.opponentDecks as card}

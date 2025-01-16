@@ -138,7 +138,7 @@ export function moveCard(
     if (opponent || revolution) {
         return showMove;
     } else {
-        onAffirm.value = showMove;
+        onAffirm.queue.push(showMove);
     }
     return () => {};
 }
@@ -147,7 +147,7 @@ export function moveCard(
 export const moving = $state({ player: false });
 export const gameSetup = $state({ value: false });
 export const gameStarted = $state({ value: false });
-export const onAffirm = $state({ value: (arg1: number, arg2: number, arg3: number) => {} }); // eslint-disable-line
+export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
 export const websocket = new WebSocket("ws://localhost:8765");
 export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
