@@ -2,24 +2,10 @@
     import { onMount } from "svelte";
     import { polyfill } from "mobile-drag-drop";
     import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
-    import {
-        websocket,
-        joinKey,
-        gameState,
-        SlotType,
-        player,
-        selected,
-        moveCard,
-        moving,
-        animation,
-        gameSetup,
-        gameStarted,
-        onAffirm,
-    } from "$lib/game.svelte";
+    import { websocket, joinKey, gameState, SlotType, player, selected, moveCard, moving, gameSetup, gameStarted, onAffirm } from "$lib/game.svelte";
     import CardSlot from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
-    import { delay } from "motion";
 
     let newSelected = { slotType: 0, slotId: 0 };
 
@@ -139,7 +125,7 @@
                     moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(Number(args[2]), Number(args[3]));
                     moveCard(true, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
                     break;
-                case "stuck": // TODO
+                case "stuck":
                     switch (Number(args[1])) {
                         case 0:
                             if (player.value == 2) {
@@ -221,16 +207,14 @@
 <svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
 
 <div class="flex min-h-dvh justify-center bg-gray-100 dark:bg-gray-900">
-    <div
-        class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-200 p-2 shadow-lg shadow-orange-400 ring-4 ring-orange-500/80 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-gray-800"
-    >
+    <div class="flex w-screen max-w-screen-md flex-col justify-between bg-blue-400 p-2 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-blue-900">
         <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
         <!-- <p class="text-white">
             gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player} animation.player {animation.player.playing} animation.opponent
             {animation.opponent.playing}
         </p> -->
         <!-- Other stacks -->
-        <div class="flex justify-between gap-1">
+        <div class="flex justify-between gap-1 rounded-lg p-1.5 sm:rounded-2xl sm:p-3">
             {#each gameState.opponentDecks as card}
                 <CardSlot {card} />
             {/each}
@@ -241,9 +225,7 @@
             </div>
         </div>
         <div class="flex justify-evenly">
-            <button id="amogus" class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25"
-                >STRESS <span class="font-normal">{joinKey.value}</span></button
-            >
+            <button id="amogus" class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
             <div class:flex-row-reverse={player.value === 2} class="flex gap-1 sm:gap-2">
                 {#each gameState.piles as card}
                     <CardSlot {card} />
@@ -252,7 +234,7 @@
             <button class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
         </div>
         <!-- Player stacks -->
-        <div class="flex justify-between gap-1 rounded-lg bg-orange-300 p-1.5 sm:rounded-2xl sm:p-3 dark:bg-orange-800">
+        <div class="flex justify-between gap-1 rounded-lg bg-orange-400 p-1.5 sm:rounded-2xl sm:p-3 dark:bg-orange-800">
             <div class="flex gap-1 sm:gap-2">
                 {#each gameState.playerStacks as card}
                     <CardSlot {card} />
@@ -264,5 +246,15 @@
         </div>
     </div>
 </div>
+
 <FakeCard opponent={false} />
 <FakeCard opponent={true} />
+
+{#if !gameSetup.value}
+    <div class="fixed left-0 top-0 grid h-dvh w-dvw place-content-center bg-gray-700/50">
+        <div class="rounded-md bg-gray-800 p-8 text-center text-lg font-medium text-white shadow-lg shadow-orange-500/70 ring-2 ring-orange-500">
+            <p>Game code: {joinKey.value}</p>
+            <p>Waiting for other player…</p>
+        </div>
+    </div>
+{/if}

@@ -86,7 +86,6 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                     f"move {from_type} {from_id} {to_type} {to_id} {moved_color} {moved_number} {replacement_color} {replacement_number} {opponent_deck_count}"
                 )
                 stucked = game.stuck()
-                # stucked = (True, 0)  # FIXME
                 while stucked[0]:
                     await sleep(1.5)
                     await deck_to_pile(game, connected, "stuck", stucked[1])

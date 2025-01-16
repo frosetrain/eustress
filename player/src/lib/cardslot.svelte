@@ -2,6 +2,7 @@
     import { dragenter, dragover, dragstart, drop, dragleave } from "$lib/dragndrop.svelte";
     import { selected, CardSlot, SlotType, gameSetup, gameState } from "$lib/game.svelte";
     let { card }: { card: CardSlot } = $props();
+    const orange = card.type === SlotType.playerDecks || card.type === SlotType.playerStacks;
     const cardWidth = 2.25;
     const cardHeight = 3.5;
 
@@ -34,7 +35,12 @@
         </div>
     {:else if card.count < 1}
         <!-- No card -->
-        <div style="--card-x: 0; --card-y: 0" class="card-small sm:card-large rounded-lg bg-gray-900">
+        <div
+            style="--card-x: 0; --card-y: 0"
+            class="card-small sm:card-large rounded-lg ring-4 ring-inset"
+            class:ring-orange-600={orange}
+            class:ring-blue-600={!orange}
+        >
             {card.count}
         </div>
     {:else}

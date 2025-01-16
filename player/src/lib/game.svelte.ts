@@ -87,7 +87,7 @@ export function moveCard(
                 count: deckCount,
             });
         }
-        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution && toSlot.number !== 0 }); // TODO
+        gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution && toSlot.number !== 0 });
 
         // Play animation
         const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
