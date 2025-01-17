@@ -29,6 +29,7 @@ class StressGame:
         }
         self.ready = [False, False]
         self.stress_allowed = True  # only false between stress and game resuming
+        self.precluded_piles = [0, 0]  # cards in each pile that were from before the most recent stuck
 
         # Put random cards in decks
         cards = []
@@ -94,8 +95,11 @@ class StressGame:
         elif not self.state[SlotType.p2_decks][0]:
             dative = 1
         elif not self.state[SlotType.p1_decks][0] and not self.state[SlotType.p2_decks][0]:
-            print("this is a real sticky situation. what do we do? maybe flip a coin and each player gets one pile.")
+            print("this is a real sticky situation. what do we do? maybe flip a coin and each player gets one pile.")  # TODO
             dative = 0
+        self.precluded_piles[0] = len(self.state[SlotType.piles][0])
+        self.precluded_piles[1] = len(self.state[SlotType.piles][1])
+        print("precluded", self.precluded_piles)
         print("stuck True", dative)
         return (True, dative)
 
@@ -109,8 +113,9 @@ class StressGame:
             print("Stress numbers do not match")
             return 2
         # Numbers match
-        for p in piles:  # TODO: 5 should be from the previous stuck
-            if len(p) < 5:
+        for pile, precluded in zip(piles, self.precluded_piles):
+            print("preclu", pile, precluded)
+            if len(pile) - precluded < 5:
                 print("Too few cards in pile")
                 return 3
         # Move the piles
