@@ -20,7 +20,73 @@ export class CardSlot extends Data {
     canDrop: boolean = false;
 }
 
+// i should really put all these in a class
+export const moving = $state({ player: false });
+export const gameSetup = $state({ value: false });
+export const gameStarted = $state({ value: false });
+export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
+export const websocket = new WebSocket("ws://localhost:8765");
+export const joinKey = $state({ value: 0 });
+export const player = $state({ value: 0 });
+export const selected = $state({ active: false, slotType: 0, slotId: 0 });
+export const animation = $state({
+    player: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
+    opponent: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
+});
+export const gameState: { [id: string]: CardSlot[] } = $state({
+    playerStacks: [],
+    opponentStacks: [],
+    piles: [CardSlot.create({ id: 0, type: SlotType.piles, canDrop: true }), CardSlot.create({ id: 1, type: SlotType.piles, canDrop: true })],
+    playerDecks: [CardSlot.create({ id: 0, type: SlotType.playerDecks, color: 2, number: 3, count: 36, flipped: false, canDrag: true })],
+    opponentDecks: [CardSlot.create({ id: 0, type: SlotType.opponentDecks, color: 2, number: 3, count: 36, flipped: false })],
+});
+for (let i = 0; i < 4; ++i) {
+    gameState.playerStacks.push(CardSlot.create({ id: i, type: SlotType.playerStacks, canDrop: true }));
+    gameState.opponentStacks.push(CardSlot.create({ id: i, type: SlotType.opponentStacks }));
+}
+
 const animationDuration = 0.2;
+export function playAnimation(
+    fromSlotType: number,
+    fromSlotId: number,
+    toSlotType: number,
+    toSlotId: number,
+    animColor: number,
+    animNumber: number,
+    opponent: boolean,
+    revolution: boolean,
+    afterComplete: () => void,
+) {
+    if (!opponent) {
+        moving.player = true;
+    }
+
+    const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
+    const toBbox = document.getElementById(`${toSlotType} ${toSlotId}`)!.getBoundingClientRect();
+    const fake = document.getElementById(`${opponent ? "opponent" : "player"}${revolution ? "Unflip" : "Flip"}Fake`)!;
+    const anim = animation[opponent ? "opponent" : "player"];
+    anim.playing = true;
+    anim.fromX = fromBbox.left;
+    anim.fromY = fromBbox.top;
+    anim.color = animColor;
+    anim.number = animNumber;
+    anim.flipped = !revolution;
+
+    const offsetX = toBbox.x - fromBbox.x;
+    const offsetY = toBbox.y - fromBbox.y;
+    const framerMotion = animate(fake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
+
+    delay(() => {
+        // Reset the animation to the start and hide fake
+        framerMotion.cancel();
+        anim.playing = false;
+
+        afterComplete();
+
+        if (!opponent) moving.player = false;
+    }, animationDuration);
+}
+
 export function moveCard(
     opponent: boolean,
     fromSlotType: number,
@@ -70,9 +136,6 @@ export function moveCard(
 
     const showMove = (replacementColor: number, replacementNumber: number, deckCount: number | null = null) => {
         console.log(replacementColor, replacementNumber, deckCount);
-        if (!opponent) {
-            moving.player = true;
-        }
 
         // Update from slot
         gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({
@@ -90,26 +153,7 @@ export function moveCard(
         gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({ flipped: !revolution && toSlot.number !== 0 });
 
         // Play animation
-        const fromBbox = document.getElementById(`${fromSlotType} ${fromSlotId}`)!.getBoundingClientRect();
-        const toBbox = document.getElementById(`${toSlotType} ${toSlotId}`)!.getBoundingClientRect();
-        const fake = document.getElementById(`${opponent ? "opponent" : "player"}${revolution ? "Unflip" : "Flip"}Fake`)!;
-        const anim = animation[opponent ? "opponent" : "player"];
-        anim.playing = true;
-        anim.fromX = fromBbox.left;
-        anim.fromY = fromBbox.top;
-        anim.color = fromSlot.color;
-        anim.number = fromSlot.number;
-        anim.flipped = !revolution;
-
-        const offsetX = toBbox.x - fromBbox.x;
-        const offsetY = toBbox.y - fromBbox.y;
-        const framerMotion = animate(fake, { x: offsetX, y: offsetY }, { ease: "easeOut", duration: animationDuration });
-
-        delay(() => {
-            // Reset the animation to the start and hide fake
-            framerMotion.cancel();
-            anim.playing = false;
-
+        playAnimation(fromSlotType, fromSlotId, toSlotType, toSlotId, fromSlot.color, fromSlot.number, opponent, revolution, () => {
             // Update to slot
             gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = toSlot.copy({
                 color: fromSlot.color,
@@ -131,39 +175,13 @@ export function moveCard(
             if (!opponent && !gameStarted.value && gameState.playerStacks.every((x) => x.count > 0)) {
                 websocket.send("ready");
             }
-
-            if (!opponent) moving.player = false;
-        }, animationDuration);
+        });
     };
+
     if (opponent || revolution) {
         return showMove;
     } else {
         onAffirm.queue.push(showMove);
     }
     return () => {};
-}
-
-// i should really put all these in a class
-export const moving = $state({ player: false });
-export const gameSetup = $state({ value: false });
-export const gameStarted = $state({ value: false });
-export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
-export const websocket = new WebSocket("ws://localhost:8765");
-export const joinKey = $state({ value: 0 });
-export const player = $state({ value: 0 });
-export const selected = $state({ active: false, slotType: 0, slotId: 0 });
-export const animation = $state({
-    player: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
-    opponent: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
-});
-export const gameState: { [id: string]: CardSlot[] } = $state({
-    playerStacks: [],
-    opponentStacks: [],
-    piles: [CardSlot.create({ id: 0, type: SlotType.piles, canDrop: true }), CardSlot.create({ id: 1, type: SlotType.piles, canDrop: true })],
-    playerDecks: [CardSlot.create({ id: 0, type: SlotType.playerDecks, color: 2, number: 3, count: 36, flipped: false, canDrag: true })],
-    opponentDecks: [CardSlot.create({ id: 0, type: SlotType.opponentDecks, color: 2, number: 3, count: 36, flipped: false })],
-});
-for (let i = 0; i < 4; ++i) {
-    gameState.playerStacks.push(CardSlot.create({ id: i, type: SlotType.playerStacks, canDrop: true }));
-    gameState.opponentStacks.push(CardSlot.create({ id: i, type: SlotType.opponentStacks }));
 }

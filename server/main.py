@@ -87,10 +87,22 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                 )
                 stucked = game.stuck()
                 while stucked[0]:
-                    await sleep(1.5)
+                    await sleep(1)
                     await deck_to_pile(game, connected, "stuck", stucked[1])
                     stucked = game.stuck()
-                    await sleep(0.69)
+            case "stress":
+                result = game.stress(player)
+                if result == 0:
+                    print(game.state, 5 - player)
+                    loser_deck_count = len(game.state[5 - player][0])
+                    await websocket.send(f"stressed true {loser_deck_count}")
+                    await connected[2 - player].send(f"stressed false {loser_deck_count}")
+                else:
+                    await websocket.send(f"invalidStress {result}")
+                    continue
+                await sleep(1)
+                await deck_to_pile(game, connected, "begin", 0)
+                game.stress_allowed = True
 
 
 async def deck_to_pile(game: StressGame, connected: OrderedSet[ServerConnection], command: str, dative: int) -> None:

@@ -2,12 +2,26 @@
     import { onMount } from "svelte";
     import { polyfill } from "mobile-drag-drop";
     import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
-    import { websocket, joinKey, gameState, SlotType, player, selected, moveCard, moving, gameSetup, gameStarted, onAffirm } from "$lib/game.svelte";
-    import CardSlot from "$lib/cardslot.svelte";
+    import {
+        websocket,
+        joinKey,
+        gameState,
+        playAnimation,
+        SlotType,
+        player,
+        selected,
+        moveCard,
+        moving,
+        gameSetup,
+        gameStarted,
+        onAffirm,
+    } from "$lib/game.svelte";
+    import CardSlotComponent from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
 
     let newSelected = { slotType: 0, slotId: 0 };
+    let stressPressed = $state([false, false]);
 
     function updateSelected() {
         if (newSelected.slotType === SlotType.playerDecks) {
@@ -94,6 +108,23 @@
                 return 3;
         }
         return 0;
+    }
+
+    function stress0() {
+        console.log("STRESS 0");
+        stressPressed[0] = true;
+        stress();
+    }
+    function stress1() {
+        console.log("STRESS 1");
+        stressPressed[1] = true;
+        stress();
+    }
+    function stress() {
+        if (!stressPressed.every((e) => e) || !gameStarted.value) {
+            return;
+        }
+        websocket.send("stress");
     }
 
     onMount(() => {
@@ -191,6 +222,42 @@
                     const showMove = moveCard(true, fromType, fromId, toType, toId)!;
                     showMove(replacementColor, replacementNumber, opponentDeckCount);
                     break;
+                case "invalidStress":
+                    break;
+                case "stressed":
+                    const won = args[1] === "true";
+                    const loserDeckCount = Number(args[2]);
+                    const loserType = won ? "opponentDecks" : "playerDecks";
+                    console.log(loserDeckCount, loserType, gameState[loserType]);
+                    gameState[loserType][0] = gameState[loserType][0].copy({ count: loserDeckCount });
+                    gameState.piles[0] = gameState.piles[0].copy({ count: 0 });
+                    gameState.piles[1] = gameState.piles[1].copy({ count: 0 });
+
+                    // animate
+                    playAnimation(
+                        SlotType.piles,
+                        0,
+                        won ? SlotType.opponentDecks : SlotType.playerDecks,
+                        0,
+                        gameState.piles[0].color,
+                        gameState.piles[0].number,
+                        false,
+                        false,
+                        () => {},
+                    );
+                    playAnimation(
+                        SlotType.piles,
+                        1,
+                        won ? SlotType.opponentDecks : SlotType.playerDecks,
+                        0,
+                        gameState.piles[1].color,
+                        gameState.piles[1].number,
+                        true,
+                        false,
+                        () => {},
+                    );
+
+                    break;
                 default:
                     console.log("invalid command from server");
                     break;
@@ -216,32 +283,42 @@
         <!-- Other stacks -->
         <div class="flex justify-between gap-1 rounded-lg p-1.5 sm:rounded-2xl sm:p-3">
             {#each gameState.opponentDecks as card}
-                <CardSlot {card} />
+                <CardSlotComponent {card} />
             {/each}
             <div class="flex flex-row-reverse gap-1 sm:gap-2">
                 {#each gameState.opponentStacks as card}
-                    <CardSlot {card} />
+                    <CardSlotComponent {card} />
                 {/each}
             </div>
         </div>
         <div class="flex justify-evenly">
-            <button id="amogus" class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
+            <button
+                onclick={stress0}
+                class:ring-8={stressPressed[0]}
+                class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 shadow-md shadow-gray-900/40 ring-red-600 transition disabled:opacity-25"
+                >STRESS</button
+            >
             <div class:flex-row-reverse={player.value === 2} class="flex gap-1 sm:gap-2">
                 {#each gameState.piles as card}
-                    <CardSlot {card} />
+                    <CardSlotComponent {card} />
                 {/each}
             </div>
-            <button class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 disabled:opacity-25">STRESS</button>
+            <button
+                onclick={stress1}
+                class:ring-8={stressPressed[1]}
+                class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 shadow-md shadow-gray-900/40 ring-red-600 transition disabled:opacity-25"
+                >STRESS</button
+            >
         </div>
         <!-- Player stacks -->
-        <div class="flex justify-between gap-1 rounded-lg bg-orange-400 p-1.5 sm:rounded-2xl sm:p-3 dark:bg-orange-800">
+        <div class="flex justify-between gap-1 rounded-lg bg-orange-400 p-1.5 shadow-md shadow-gray-900/50 sm:rounded-2xl sm:p-3 dark:bg-orange-800">
             <div class="flex gap-1 sm:gap-2">
                 {#each gameState.playerStacks as card}
-                    <CardSlot {card} />
+                    <CardSlotComponent {card} />
                 {/each}
             </div>
             {#each gameState.playerDecks as card}
-                <CardSlot {card} />
+                <CardSlotComponent {card} />
             {/each}
         </div>
     </div>
@@ -252,7 +329,7 @@
 
 {#if !gameSetup.value}
     <div class="fixed left-0 top-0 grid h-dvh w-dvw place-content-center bg-gray-700/50">
-        <div class="rounded-md bg-gray-800 p-8 text-center text-lg font-medium text-white shadow-lg shadow-orange-500/70 ring-2 ring-orange-500">
+        <div class="rounded-md bg-gray-800 p-8 text-center font-medium text-white shadow-lg shadow-orange-500/70 ring-2 ring-orange-500 sm:text-lg">
             <p>Game code: {joinKey.value}</p>
             <p>Waiting for other player…</p>
         </div>

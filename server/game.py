@@ -28,6 +28,7 @@ class StressGame:
             SlotType.p2_decks: [[]],
         }
         self.ready = [False, False]
+        self.stress_allowed = True  # only false between stress and game resuming
 
         # Put random cards in decks
         cards = []
@@ -97,6 +98,30 @@ class StressGame:
             dative = 0
         print("stuck True", dative)
         return (True, dative)
+
+    def stress(self, player: int) -> int:
+        """Stress."""
+        if not self.stress_allowed:
+            return 1
+        piles = self.state[SlotType.piles]
+        # At least 5 cards in each pile
+        if piles[0][-1].number != piles[1][-1].number:
+            print("Stress numbers do not match")
+            return 2
+        # Numbers match
+        for p in piles:  # TODO: 5 should be from the previous stuck
+            if len(p) < 5:
+                print("Too few cards in pile")
+                return 3
+        # Move the piles
+        self.stress_allowed = False
+        print(self.state[5 - player][0])
+        self.state[5 - player][0][:0] = piles[0]
+        print(self.state[5 - player][0])
+        self.state[5 - player][0][:0] = piles[1]
+        print(self.state[5 - player][0])
+        self.state[SlotType.piles] = [[], []]
+        return 0
 
 
 def flip_player(card_type: int) -> int:
