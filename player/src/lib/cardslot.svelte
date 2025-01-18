@@ -31,7 +31,7 @@
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
             class="card card-small sm:card-large shrink-0 bg-no-repeat"
         >
-            {card.count}
+            <!-- {card.count} -->
         </div>
     {:else if card.count < 1}
         <!-- No card -->
@@ -39,23 +39,24 @@
             style="--card-x: 0; --card-y: 0"
             class="card-small sm:card-large rounded-lg ring-4 ring-inset"
             class:ring-orange-600={orange}
-            class:ring-blue-600={!orange}
+            class:ring-gray-400={!orange}
+            class:dark:ring-gray-500={!orange}
         >
-            {card.count}
+            <!-- {card.count} -->
         </div>
     {:else}
         <!-- Back of card -->
         <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-no-repeat">
             <p>
-                {card.color}
-                {card.number}
-                {card.count}
+                <!-- {card.color} -->
+                <!-- {card.number} -->
+                <!-- {card.count} -->
             </p>
         </div>
     {/if}
 
     {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}
-        <div class="absolute left-0 top-0 h-full w-full rounded-lg border-8 border-orange-500"></div>
+        <div class="absolute left-0 top-0 h-full w-full rounded-lg border-8 border-fuchsia-500"></div>
     {/if}
     {#if card.canDrop}
         <div

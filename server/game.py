@@ -65,9 +65,11 @@ class StressGame:
 
     def stuck(self) -> tuple[bool, int]:
         """Returns whether it is impossible to pile on more cards."""
+        # Return if there are empty piles
         if not all(self.state[SlotType.piles]):
             print("pile(s) is/are empty")
             return (False, 0)
+        # Return if there are empty stacks
         p1_full = all(self.state[SlotType.p1_stacks]) or not self.state[SlotType.p1_decks][0]
         p2_full = all(self.state[SlotType.p2_stacks]) or not self.state[SlotType.p2_decks][0]
         if not (p1_full and p2_full):
@@ -79,6 +81,22 @@ class StressGame:
                 not self.state[SlotType.p2_decks][0],
             )
             return (False, 0)
+        # Return if stacks are not unique
+        if self.state[SlotType.p1_decks][0]:
+            p1_unique = set([e[-1].number for e in self.state[SlotType.p1_stacks]])
+            if len(p1_unique) < 4:
+                print("p1 stacks have duplicate numbers")
+                return (False, 0)
+        if self.state[SlotType.p2_decks][0]:
+            p2_unique = set([e[-1].number for e in self.state[SlotType.p2_stacks]])
+            if len(p2_unique) < 4:
+                print("p2 stacks have duplicate numbers")
+                return (False, 0)
+        # Return if stress is possible
+        if self.check_stress() == 0:
+            print("stress is possible")
+            return (False, 0)
+        # Return if not stuck
         pile_accepted = set()
         for p in self.state[SlotType.piles]:
             if p:
@@ -87,7 +105,7 @@ class StressGame:
         for c in self.state[SlotType.p1_stacks] + self.state[SlotType.p2_stacks]:
             if c:
                 if c[-1].number in pile_accepted:
-                    print("stuck False")
+                    print("cards not stuck")
                     return (False, 0)
         dative = 0
         if not self.state[SlotType.p1_decks][0]:
@@ -103,22 +121,30 @@ class StressGame:
         print("stuck True", dative)
         return (True, dative)
 
-    def stress(self, player: int) -> int:
-        """Stress."""
+    def check_stress(self) -> int:
+        """Check whether stress is possible."""
         if not self.stress_allowed:
             return 1
         piles = self.state[SlotType.piles]
-        # At least 5 cards in each pile
+        # Numbers match
         if piles[0][-1].number != piles[1][-1].number:
             print("Stress numbers do not match")
             return 2
-        # Numbers match
+        # At least 3 cards in each pile
         for pile, precluded in zip(piles, self.precluded_piles):
             print("preclu", pile, precluded)
-            if len(pile) - precluded < 5:
+            if len(pile) - precluded < 3:
                 print("Too few cards in pile")
                 return 3
+        return 0
+
+    def stress(self, player: int) -> int:
+        """Stress."""
+        stress_check = self.check_stress()
+        if stress_check > 0:
+            return stress_check
         # Move the piles
+        piles = self.state[SlotType.piles]
         self.stress_allowed = False
         print(self.state[5 - player][0])
         self.state[5 - player][0][:0] = piles[0]
@@ -126,6 +152,16 @@ class StressGame:
         self.state[5 - player][0][:0] = piles[1]
         print(self.state[5 - player][0])
         self.state[SlotType.piles] = [[], []]
+        return 0
+
+    def check_winner(self) -> int:
+        """Check who won the game."""
+        p1_no_cards = not any(self.state[SlotType.p1_stacks]) and not self.state[SlotType.p1_decks][0]
+        p2_no_cards = not any(self.state[SlotType.p2_stacks]) and not self.state[SlotType.p2_decks][0]
+        if p1_no_cards:
+            return 1
+        elif p2_no_cards:
+            return 2
         return 0
 
 

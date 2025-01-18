@@ -25,7 +25,7 @@ export const moving = $state({ player: false });
 export const gameSetup = $state({ value: false });
 export const gameStarted = $state({ value: false });
 export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
-export const websocket = new WebSocket("ws://localhost:8765");
+export const websocket = new WebSocket("ws://192.168.31.2:8765");
 export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
 export const selected = $state({ active: false, slotType: 0, slotId: 0 });

@@ -19,9 +19,11 @@
     import CardSlotComponent from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
+    import { delay } from "motion";
 
     let newSelected = { slotType: 0, slotId: 0 };
     let stressPressed = $state([false, false]);
+    let winScreen = $state(0);
 
     function updateSelected() {
         if (newSelected.slotType === SlotType.playerDecks) {
@@ -35,7 +37,7 @@
     }
 
     function onKeyPress(event: KeyboardEvent) {
-        if (!gameSetup.value || moving.player) {
+        if (!gameSetup.value) {
             return;
         }
         const stackKeys = "asdf";
@@ -124,6 +126,7 @@
         if (!stressPressed.every((e) => e) || !gameStarted.value) {
             return;
         }
+        stressPressed = [false, false];
         websocket.send("stress");
     }
 
@@ -223,11 +226,12 @@
                     showMove(replacementColor, replacementNumber, opponentDeckCount);
                     break;
                 case "invalidStress":
+                    stressPressed = [false, false];
                     break;
                 case "stressed":
-                    const won = args[1] === "true";
+                    const stressWon = args[1] === "true";
                     const loserDeckCount = Number(args[2]);
-                    const loserType = won ? "opponentDecks" : "playerDecks";
+                    const loserType = stressWon ? "opponentDecks" : "playerDecks";
                     console.log(loserDeckCount, loserType, gameState[loserType]);
                     gameState[loserType][0] = gameState[loserType][0].copy({ count: loserDeckCount });
                     gameState.piles[0] = gameState.piles[0].copy({ count: 0 });
@@ -237,7 +241,7 @@
                     playAnimation(
                         SlotType.piles,
                         0,
-                        won ? SlotType.opponentDecks : SlotType.playerDecks,
+                        stressWon ? SlotType.opponentDecks : SlotType.playerDecks,
                         0,
                         gameState.piles[0].color,
                         gameState.piles[0].number,
@@ -248,7 +252,7 @@
                     playAnimation(
                         SlotType.piles,
                         1,
-                        won ? SlotType.opponentDecks : SlotType.playerDecks,
+                        stressWon ? SlotType.opponentDecks : SlotType.playerDecks,
                         0,
                         gameState.piles[1].color,
                         gameState.piles[1].number,
@@ -256,7 +260,16 @@
                         false,
                         () => {},
                     );
-
+                    break;
+                case "game":
+                    const gameWon = args[1] === "true";
+                    if (gameWon) {
+                        winScreen = 1;
+                    } else {
+                        winScreen = 2;
+                    }
+                    gameStarted.value = false;
+                    gameSetup.value = false;
                     break;
                 default:
                     console.log("invalid command from server");
@@ -272,8 +285,11 @@
 
 <svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
 
-<div class="flex min-h-dvh justify-center bg-gray-100 dark:bg-gray-900">
-    <div class="flex w-screen max-w-screen-md flex-col justify-between bg-blue-400 p-2 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-blue-900">
+<div class="flex min-h-dvh justify-center bg-white dark:bg-gray-900">
+    <div
+        class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-200 p-2 shadow-orange-500/50 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-gray-700"
+        style="box-shadow: inset 0 0 6px 6px var(--tw-shadow-color);"
+    >
         <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
         <!-- <p class="text-white">
             gameSetup {gameSetup.value}; gameStarted {gameStarted.value}; moving {moving.player} animation.player {animation.player.playing} animation.opponent
@@ -295,7 +311,7 @@
             <button
                 onclick={stress0}
                 class:ring-8={stressPressed[0]}
-                class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 shadow-md shadow-gray-900/40 ring-red-600 transition disabled:opacity-25"
+                class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 shadow-md shadow-gray-900/40 ring-red-600 disabled:opacity-25"
                 >STRESS</button
             >
             <div class:flex-row-reverse={player.value === 2} class="flex gap-1 sm:gap-2">
@@ -306,12 +322,12 @@
             <button
                 onclick={stress1}
                 class:ring-8={stressPressed[1]}
-                class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 shadow-md shadow-gray-900/40 ring-red-600 transition disabled:opacity-25"
+                class="my-auto rounded bg-orange-500 px-4 py-2.5 text-lg font-black text-gray-900 shadow-md shadow-gray-900/40 ring-red-600 disabled:opacity-25"
                 >STRESS</button
             >
         </div>
         <!-- Player stacks -->
-        <div class="flex justify-between gap-1 rounded-lg bg-orange-400 p-1.5 shadow-md shadow-gray-900/50 sm:rounded-2xl sm:p-3 dark:bg-orange-800">
+        <div class="flex justify-between gap-1 rounded-lg bg-orange-500 p-1.5 shadow-md shadow-gray-900/30 sm:rounded-2xl sm:p-3 dark:bg-orange-700">
             <div class="flex gap-1 sm:gap-2">
                 {#each gameState.playerStacks as card}
                     <CardSlotComponent {card} />
@@ -327,11 +343,20 @@
 <FakeCard opponent={false} />
 <FakeCard opponent={true} />
 
-{#if !gameSetup.value}
+{#if !gameSetup.value && winScreen == 0}
     <div class="fixed left-0 top-0 grid h-dvh w-dvw place-content-center bg-gray-700/50">
-        <div class="rounded-md bg-gray-800 p-8 text-center font-medium text-white shadow-lg shadow-orange-500/70 ring-2 ring-orange-500 sm:text-lg">
+        <div class="rounded-md bg-gray-800 p-8 text-center font-medium text-white shadow-lg shadow-orange-500/70 ring-4 ring-orange-500 sm:text-lg">
             <p>Game code: {joinKey.value}</p>
             <p>Waiting for other player…</p>
+        </div>
+    </div>
+{/if}
+
+{#if winScreen > 0}
+    <div class="fixed left-0 top-0 grid h-dvh w-dvw place-content-center bg-gray-700/50">
+        <div class="rounded-md bg-gray-800 p-8 text-center font-medium text-white shadow-lg shadow-orange-500/70 ring-4 ring-orange-500 sm:text-lg">
+            {winScreen === 1 ? "You win!!!!" : "You lose! :("}
+            <a href="/" data-sveltekit-reload class="bold mt-4 block rounded-md bg-blue-600 px-5 py-2.5 text-sm">Return to menu</a>
         </div>
     </div>
 {/if}

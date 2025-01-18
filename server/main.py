@@ -23,8 +23,9 @@ async def start(websocket: ServerConnection) -> None:
         print("player 1 started game", join_key)
         await play(websocket, game, 1, connected)
     finally:
+        connected.remove(websocket)
         del stress_games[join_key]
-        print("player 1 disconnected")
+        print("player 1 left game")
 
 
 async def join(websocket: ServerConnection, join_key: int) -> None:
@@ -51,11 +52,12 @@ async def join(websocket: ServerConnection, join_key: int) -> None:
         await play(websocket, game, 2, connected)
     finally:
         connected.remove(websocket)
-        print("player 2 disconnected")
+        print("player 2 left game")
 
 
 async def play(websocket: ServerConnection, game: StressGame, player: int, connected: OrderedSet[ServerConnection]) -> None:
     """Main game loop."""
+    i = 0
     async for message in websocket:
         print(f"{player}<<{message}")
         args = message.split(" ")
@@ -67,6 +69,8 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                     await deck_to_pile(game, connected, "begin", 0)
                     print(game.state[SlotType.piles])
             case "move":
+                i += 1
+                print("i", i)
                 from_type, from_id, to_type, to_id, to_number = map(int, args[1:])
                 if player == 2:
                     from_type = flip_player(from_type)
@@ -90,6 +94,15 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                     await sleep(1)
                     await deck_to_pile(game, connected, "stuck", stucked[1])
                     stucked = game.stuck()
+                # Check if game won
+                winner = game.check_winner()
+                if winner > 0 or i > 10:  # FIXME
+                    winner = player  # FIXME
+                    print(f"PLAYER {winner} has WON!")
+                    await sleep(1)
+                    await connected[winner - 1].send("game true")
+                    await connected[2 - winner].send("game false")
+                    return
             case "stress":
                 result = game.stress(player)
                 if result == 0:

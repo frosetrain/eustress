@@ -55,18 +55,16 @@
                 <div class="space-y-3">
                     <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">Join an existing game</h1>
                     <div class="flex w-full gap-2">
-                        <div>
-                            <input
-                                bind:value
-                                id="joinKey"
-                                type="text"
-                                placeholder="Game code"
-                                class="block rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                            />
-                        </div>
+                        <input
+                            bind:value
+                            id="joinKey"
+                            type="text"
+                            placeholder="Game code"
+                            class="block w-28 flex-1 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                        />
                         <button
                             onclick={join}
-                            class="text-ms w-full rounded-lg bg-blue-600 px-5 py-2.5 text-center font-medium text-white transition hover:bg-blue-700 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700"
+                            class="text-ms flex-none rounded-lg bg-blue-600 px-5 py-2.5 text-center font-medium text-white transition hover:bg-blue-700 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700"
                             >{#if joinLoading}
                                 Loading…
                             {:else}
