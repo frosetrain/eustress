@@ -1,7 +1,7 @@
 import { animate, delay } from "motion";
 
-export function showShout(message: string, warning: boolean) {
-    const shoutDiv = document.getElementById("shout")!;
+export function showShout(message: string, warning: boolean, opponent: boolean) {
+    const shoutDiv = document.getElementById(opponent ? "opponentShout" : "playerShout")!;
 
     // shoutElement.style.opacity = "1";
     // shoutElement.style.transform = "";

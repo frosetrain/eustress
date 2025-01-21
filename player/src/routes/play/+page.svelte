@@ -122,12 +122,12 @@
     }
 
     function stress0() {
-        showShout("Hello darkness my old friend", false);
+        // showShout("Hello darkness my old friend", false, false);
         stressPressed[0] = true;
         stress();
     }
     function stress1() {
-        showShout("This is a warning warning.", true);
+        // showShout("This is a warning warning.", true, true);
         stressPressed[1] = true;
         stress();
     }
@@ -354,7 +354,12 @@
                 <CardSlotComponent {card} />
             {/each}
         </div>
-        <div id="shout" class="absolute left-1/2 top-2/3 grid h-20 w-full place-content-center px-4" style="transform: translate(-50%, -50%);">
+        <div
+            id="opponentShout"
+            class="absolute left-1/2 top-1/3 grid h-20 w-full place-content-center px-4"
+            style="transform: translate(-50%, -50%);"
+        ></div>
+        <div id="playerShout" class="absolute left-1/2 top-2/3 grid h-20 w-full place-content-center px-4" style="transform: translate(-50%, -50%);">
             <p class="text-gray-700 dark:text-gray-200">Click on your deck, then drag the card to one of your stacks.</p>
         </div>
     </div>
