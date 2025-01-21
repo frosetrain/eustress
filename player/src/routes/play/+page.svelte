@@ -11,15 +11,14 @@
         player,
         selected,
         moveCard,
-        moving,
         gameSetup,
         gameStarted,
         onAffirm,
     } from "$lib/game.svelte";
+    import { showShout } from "$lib/shout.svelte";
     import CardSlotComponent from "$lib/cardslot.svelte";
     import { goto } from "$app/navigation";
     import FakeCard from "$lib/fakecard.svelte";
-    import { delay } from "motion";
 
     let newSelected = { slotType: 0, slotId: 0 };
     let stressPressed = $state([false, false]);
@@ -34,6 +33,15 @@
         }
         selected.slotType = newSelected.slotType;
         selected.slotId = newSelected.slotId;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+        const stressKeys = ["ShiftLeft", "ShiftRight"];
+        if (stressKeys.includes(event.code)) {
+            const shiftId = stressKeys.indexOf(event.code);
+            stressPressed[shiftId] = true;
+            stress();
+        }
     }
 
     function onKeyPress(event: KeyboardEvent) {
@@ -56,6 +64,7 @@
         } else {
             return;
         }
+        stressPressed = [false, false];
 
         if (!selected.active) {
             if (newSelected.slotType !== SlotType.piles) {
@@ -113,20 +122,23 @@
     }
 
     function stress0() {
-        console.log("STRESS 0");
+        showShout("Hello darkness my old friend", false);
         stressPressed[0] = true;
         stress();
     }
     function stress1() {
-        console.log("STRESS 1");
+        showShout("This is a warning warning.", true);
         stressPressed[1] = true;
         stress();
     }
     function stress() {
-        if (!stressPressed.every((e) => e) || !gameStarted.value) {
+        if (!gameStarted.value) {
+            stressPressed = [false, false];
             return;
         }
-        stressPressed = [false, false];
+        if (!stressPressed.every((e) => e)) {
+            return;
+        }
         websocket.send("stress");
     }
 
@@ -135,7 +147,7 @@
             goto("/");
         }
         websocket.onmessage = ({ data }) => {
-            console.log(data);
+            console.debug(data);
             const args = data.split(" ");
             const command = args[0];
             switch (command) {
@@ -152,6 +164,7 @@
                     break;
                 case "begin":
                     gameStarted.value = true;
+                    stressPressed = [false, false];
                     // Move the top card in each deck to a pile
                     if (player.value == 2) {
                         [args[2], args[3], args[4], args[5]] = [args[4], args[5], args[2], args[3]];
@@ -165,7 +178,7 @@
                             if (player.value == 2) {
                                 [args[2], args[3], args[4], args[5]] = [args[4], args[5], args[2], args[3]];
                             }
-                            console.log("stuck 0");
+                            console.debug("stuck 0");
                             moveCard(false, SlotType.playerDecks, 0, SlotType.piles, player.value === 1 ? 0 : 1, true)!(
                                 Number(args[2]),
                                 Number(args[3]),
@@ -176,7 +189,7 @@
                             );
                             break;
                         case 1:
-                            console.log("stuck 1");
+                            console.debug("stuck 1");
                             moveCard(false, player.value === 1 ? SlotType.playerDecks : SlotType.opponentDecks, 0, SlotType.piles, 0, true)!(
                                 Number(args[2]),
                                 Number(args[3]),
@@ -187,7 +200,7 @@
                             );
                             break;
                         case 2:
-                            console.log("stuck 2");
+                            console.debug("stuck 2");
                             moveCard(false, player.value === 1 ? SlotType.opponentDecks : SlotType.playerDecks, 0, SlotType.piles, 0, true)!(
                                 Number(args[2]),
                                 Number(args[3]),
@@ -219,7 +232,7 @@
                         replacementNumber,
                         opponentDeckCount,
                     ]: [number, number, number, number, number, number, number, number, number, number] = args.map((x: string) => Number(x));
-                    // console.log(fromType, fromId, toType, toId, movedColor, movedNumber, replacementColor, replacementNumber, opponentDeckCount);
+                    // console.debug(fromType, fromId, toType, toId, movedColor, movedNumber, replacementColor, replacementNumber, opponentDeckCount);
                     const fromType = player.value === 2 ? flipPlayer(fromTypeReal) : fromTypeReal;
                     const toType = player.value === 2 ? flipPlayer(toTypeReal) : toTypeReal;
                     const showMove = moveCard(true, fromType, fromId, toType, toId)!;
@@ -232,12 +245,11 @@
                     const stressWon = args[1] === "true";
                     const loserDeckCount = Number(args[2]);
                     const loserType = stressWon ? "opponentDecks" : "playerDecks";
-                    console.log(loserDeckCount, loserType, gameState[loserType]);
+                    console.debug("stressed", loserDeckCount, loserType, gameState[loserType]);
                     gameState[loserType][0] = gameState[loserType][0].copy({ count: loserDeckCount });
                     gameState.piles[0] = gameState.piles[0].copy({ count: 0 });
                     gameState.piles[1] = gameState.piles[1].copy({ count: 0 });
 
-                    // animate
                     playAnimation(
                         SlotType.piles,
                         0,
@@ -272,7 +284,7 @@
                     gameSetup.value = false;
                     break;
                 default:
-                    console.log("invalid command from server");
+                    console.warn("invalid command from server");
                     break;
             }
         };
@@ -283,11 +295,16 @@
     });
 </script>
 
-<svelte:window on:dragenter={(event) => event.preventDefault()} on:touchmove={() => {}} on:keypress|preventDefault={onKeyPress} />
+<svelte:window
+    on:dragenter={(event) => event.preventDefault()}
+    on:touchmove={() => {}}
+    on:keypress|preventDefault={onKeyPress}
+    on:keydown={onKeyDown}
+/>
 
 <div class="flex min-h-dvh justify-center bg-white dark:bg-gray-900">
     <div
-        class="flex w-screen max-w-screen-md flex-col justify-between bg-gray-200 p-2 shadow-orange-500/50 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-gray-700"
+        class="relative flex w-screen max-w-screen-md flex-col justify-between bg-gray-200 p-2 shadow-orange-500/50 sm:m-8 sm:rounded-lg sm:p-4 dark:bg-gray-700"
         style="box-shadow: inset 0 0 6px 6px var(--tw-shadow-color);"
     >
         <!-- <p class="text-white">{selected.active} {selected.slotType} {selected.slotId}</p> -->
@@ -336,6 +353,9 @@
             {#each gameState.playerDecks as card}
                 <CardSlotComponent {card} />
             {/each}
+        </div>
+        <div id="shout" class="absolute left-1/2 top-2/3 grid h-20 w-full place-content-center px-4" style="transform: translate(-50%, -50%);">
+            <p class="text-gray-700 dark:text-gray-200">Click on your deck, then drag the card to one of your stacks.</p>
         </div>
     </div>
 </div>

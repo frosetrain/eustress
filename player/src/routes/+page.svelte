@@ -40,7 +40,7 @@
         <div class="w-full rounded-lg bg-white shadow sm:max-w-md md:mt-0 xl:p-0 dark:border dark:border-gray-700 dark:bg-gray-800">
             <div class="space-y-8 p-6 sm:p-8">
                 <div class="space-y-3">
-                    <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">Start a new game</h1>
+                    <h1 class="text-xl font-bold leading-tight text-gray-900 dark:text-white">Start a new game</h1>
                     <button
                         onclick={start}
                         class="text-ms w-full rounded-lg bg-blue-600 px-5 py-3 text-center font-medium text-white transition hover:bg-blue-700 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700"
@@ -53,7 +53,7 @@
                     </button>
                 </div>
                 <div class="space-y-3">
-                    <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">Join an existing game</h1>
+                    <h1 class="text-xl font-bold leading-tight text-gray-900 dark:text-white">Join an existing game</h1>
                     <div class="flex w-full gap-2">
                         <input
                             bind:value

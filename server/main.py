@@ -57,7 +57,6 @@ async def join(websocket: ServerConnection, join_key: int) -> None:
 
 async def play(websocket: ServerConnection, game: StressGame, player: int, connected: OrderedSet[ServerConnection]) -> None:
     """Main game loop."""
-    i = 0
     async for message in websocket:
         print(f"{player}<<{message}")
         args = message.split(" ")
@@ -69,8 +68,6 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                     await deck_to_pile(game, connected, "begin", 0)
                     print(game.state[SlotType.piles])
             case "move":
-                i += 1
-                print("i", i)
                 from_type, from_id, to_type, to_id, to_number = map(int, args[1:])
                 if player == 2:
                     from_type = flip_player(from_type)
@@ -96,10 +93,9 @@ async def play(websocket: ServerConnection, game: StressGame, player: int, conne
                     stucked = game.stuck()
                 # Check if game won
                 winner = game.check_winner()
-                if winner > 0 or i > 10:  # FIXME
-                    winner = player  # FIXME
+                if winner > 0:
                     print(f"PLAYER {winner} has WON!")
-                    await sleep(1)
+                    await sleep(0.3)
                     await connected[winner - 1].send("game true")
                     await connected[2 - winner].send("game false")
                     return

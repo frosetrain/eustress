@@ -17,6 +17,12 @@
     }
 </script>
 
+{#snippet cardCounter(count: number)}
+    <div class="ml-auto flex w-7 justify-center rounded-md bg-gray-100 font-mono backdrop-blur-sm sm:rounded-xl">
+        {count}
+    </div>
+{/snippet}
+
 <div
     id={`${card.type} ${card.id}`}
     class="relative"
@@ -31,37 +37,31 @@
             style="--card-x: {(card.number - 1) * cardWidth}in; --card-y: {card.color * cardHeight}in"
             class="card card-small sm:card-large shrink-0 bg-no-repeat"
         >
-            <!-- {card.count} -->
+            {@render cardCounter(card.count)}
         </div>
     {:else if card.count < 1}
         <!-- No card -->
         <div
             style="--card-x: 0; --card-y: 0"
-            class="card-small sm:card-large rounded-lg ring-4 ring-inset"
+            class="card-small sm:card-large rounded-md ring-4 ring-inset sm:rounded-xl"
             class:ring-orange-600={orange}
             class:ring-gray-400={!orange}
             class:dark:ring-gray-500={!orange}
-        >
-            <!-- {card.count} -->
-        </div>
+        ></div>
     {:else}
         <!-- Back of card -->
         <div style="--card-x: {9 * cardWidth}in; --card-y: 0in" class="card card-small sm:card-large shrink-0 bg-no-repeat">
-            <p>
-                <!-- {card.color} -->
-                <!-- {card.number} -->
-                <!-- {card.count} -->
-            </p>
+            {@render cardCounter(card.count)}
         </div>
     {/if}
 
     {#if selected.active && selected.slotType === card.type && selected.slotId === card.id}
-        <div class="absolute left-0 top-0 h-full w-full rounded-lg border-8 border-fuchsia-500"></div>
+        <div class="absolute left-0 top-0 h-full w-full rounded-md border-8 border-fuchsia-500 sm:rounded-xl"></div>
     {/if}
     {#if card.canDrop}
         <div
             id={`${card.type} ${card.id}`}
-            class="absolute left-0 top-0 h-full w-full rounded-lg border-fuchsia-500"
+            class="absolute left-0 top-0 h-full w-full rounded-md border-fuchsia-500 sm:rounded-xl"
             ondrop={(event) => drop(event)}
             ondragenter={(event) => dragenter(event)}
             ondragleave={(event) => dragleave(event)}

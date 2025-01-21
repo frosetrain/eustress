@@ -25,7 +25,7 @@ export const moving = $state({ player: false });
 export const gameSetup = $state({ value: false });
 export const gameStarted = $state({ value: false });
 export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
-export const websocket = new WebSocket("ws://192.168.31.2:8765");
+export const websocket = new WebSocket("ws://127.0.0.1:8765");
 export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
 export const selected = $state({ active: false, slotType: 0, slotId: 0 });
@@ -95,37 +95,37 @@ export function moveCard(
     toSlotId: number,
     revolution: boolean = false,
 ) {
-    console.log(opponent, fromSlotType, fromSlotId, toSlotType, toSlotId);
+    console.debug(opponent, fromSlotType, fromSlotId, toSlotType, toSlotId);
     if (!opponent && moving.player && !revolution) {
-        console.log("moveCard returned: player moving");
+        console.debug("moveCard returned: player moving");
         return;
     }
     if (!opponent && !gameStarted.value && toSlotType === SlotType.piles) {
-        console.log("moveCard returned: moved to pile before game started");
+        console.debug("moveCard returned: moved to pile before game started");
         return;
     }
 
     const fromSlot = gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId];
     const toSlot = gameState[Object.keys(SlotType)[toSlotType]][toSlotId];
     if (fromSlot.count <= 0) {
-        console.log("moveCard returned: fromSlot count <= 0");
+        console.debug("moveCard returned: fromSlot count <= 0");
         return;
     }
     if (!opponent && !fromSlot.flipped && !revolution) {
-        console.log("not flipped");
+        console.debug("not flipped");
         return;
     }
 
     // When moving to piles, make sure it's one higher or lower
     const diff = Math.abs(fromSlot.number - toSlot.number);
     if (toSlot.type === SlotType.piles && !(diff === 1 || diff === 8) && !opponent && !revolution) {
-        console.log("moveCard returned: number is not valid");
+        console.debug("moveCard returned: number is not valid");
         return;
     }
 
     // When moving to stacks, make sure it's the same number
     if (toSlot.type === SlotType.playerStacks && toSlot.number !== 0 && fromSlot.number !== toSlot.number) {
-        console.log("moveCard returned: number does not match");
+        console.debug("moveCard returned: number does not match");
         return;
     }
 
@@ -135,7 +135,7 @@ export function moveCard(
     }
 
     const showMove = (replacementColor: number, replacementNumber: number, deckCount: number | null = null) => {
-        console.log(replacementColor, replacementNumber, deckCount);
+        console.debug(replacementColor, replacementNumber, deckCount);
 
         // Update from slot
         gameState[Object.keys(SlotType)[fromSlotType]][fromSlotId] = fromSlot.copy({
