@@ -1,4 +1,5 @@
 import { Data } from "dataclass";
+import { PUBLIC_SERVER } from "$env/static/public";
 import { animate, delay } from "motion";
 
 export const SlotType = {
@@ -25,7 +26,7 @@ export const moving = $state({ player: false });
 export const gameSetup = $state({ value: false });
 export const gameStarted = $state({ value: false });
 export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
-export const websocket = new WebSocket("ws://127.0.0.1:8765");
+export const websocket = new WebSocket(`ws://${PUBLIC_SERVER}`);
 export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
 export const selected = $state({ active: false, slotType: 0, slotId: 0 });

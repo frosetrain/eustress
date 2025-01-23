@@ -44,7 +44,7 @@ async def join(websocket: ServerConnection, join_key: int) -> None:
         print("player 2 joined game", join_key)
         await websocket.send("affirm")
         # Send the card at the top of their pile to each player
-        await sleep(1)
+        await sleep(2)
         p1_deck_top = game.state[SlotType.p1_decks][0][-1]
         p2_deck_top = game.state[SlotType.p2_decks][0][-1]
         await connected[0].send(f"setup {p1_deck_top.color} {p1_deck_top.number} {p2_deck_top.color} {p2_deck_top.number}")
