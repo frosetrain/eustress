@@ -25,11 +25,12 @@ export class CardSlot extends Data {
 export const moving = $state({ player: false });
 export const gameSetup = $state({ value: false });
 export const gameStarted = $state({ value: false });
-export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => {})[] } = $state({ queue: [] });
+export const onAffirm: { queue: ((arg1: number, arg2: number, arg3: number) => void)[] } = $state({ queue: [] });
 export const websocket = new WebSocket(`ws://${PUBLIC_SERVER}`);
 export const joinKey = $state({ value: 0 });
 export const player = $state({ value: 0 });
 export const selected = $state({ active: false, slotType: 0, slotId: 0 });
+export const walkthroughStep = $state({ value: 0 });
 export const animation = $state({
     player: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
     opponent: { playing: false, color: 0, number: 0, fromX: 0, fromY: 0, flipped: true },
@@ -130,6 +131,13 @@ export function moveCard(
         return;
     }
 
+    if (walkthroughStep.value === 0 || walkthroughStep.value === 1) {
+        walkthroughStep.value++;
+    }
+    if (toSlot.type === SlotType.piles && (walkthroughStep.value === 4 || walkthroughStep.value === 5)) {
+        walkthroughStep.value++;
+    }
+
     // Send the move to the server
     if (!opponent && !revolution) {
         websocket.send(`move ${fromSlotType} ${fromSlotId} ${toSlotType} ${toSlotId} ${toSlot.number}`);
@@ -169,6 +177,9 @@ export function moveCard(
                     gameState[Object.keys(SlotType)[toSlotType]][toSlotId] = gameState[Object.keys(SlotType)[toSlotType]][toSlotId].copy({
                         flipped: true,
                     });
+                    if (walkthroughStep.value === 3) {
+                        walkthroughStep.value++;
+                    }
                 }, 1);
             }
 

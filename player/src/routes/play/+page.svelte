@@ -7,6 +7,7 @@
         joinKey,
         gameState,
         playAnimation,
+        walkthroughStep,
         SlotType,
         player,
         selected,
@@ -165,6 +166,9 @@
                 case "begin":
                     gameStarted.value = true;
                     stressPressed = [false, false];
+                    if (walkthroughStep.value === 2) {
+                        walkthroughStep.value++;
+                    }
                     // Move the top card in each deck to a pile
                     if (player.value == 2) {
                         [args[2], args[3], args[4], args[5]] = [args[4], args[5], args[2], args[3]];
@@ -246,6 +250,10 @@
                     const loserDeckCount = Number(args[2]);
                     const loserType = stressWon ? "opponentDecks" : "playerDecks";
                     console.debug("stressed", loserDeckCount, loserType, gameState[loserType]);
+                    showShout("STRESS!", true, !stressWon);
+                    if (walkthroughStep.value === 6) {
+                        walkthroughStep.value++;
+                    }
                     gameState[loserType][0] = gameState[loserType][0].copy({ count: loserDeckCount });
                     gameState.piles[0] = gameState.piles[0].copy({ count: 0 });
                     gameState.piles[1] = gameState.piles[1].copy({ count: 0 });
@@ -360,7 +368,23 @@
             style="transform: translate(-50%, -50%);"
         ></div>
         <div id="playerShout" class="absolute left-1/2 top-2/3 grid h-20 w-full place-content-center px-4" style="transform: translate(-50%, -50%);">
-            <p class="text-gray-700 dark:text-gray-200">Click on your deck, then drag the card to one of your stacks.</p>
+            <p class="text-gray-700 dark:text-gray-200">
+                {#if walkthroughStep.value === 0}
+                    Click on your deck, then drag the card to one of your stacks.
+                {:else if walkthroughStep.value === 1}
+                    You can stack cards together if they have the same number.
+                {:else if walkthroughStep.value === 2}
+                    Once both players have filled their 4 stacks, the game will begin automatically.
+                {:else if walkthroughStep.value === 3}
+                    Get ready…
+                {:else if walkthroughStep.value === 4}
+                    Drag a card from one of your stacks to a pile, if the number is one higher or one lower.
+                {:else if walkthroughStep.value === 5}
+                    When the pile has a 9, you can place a 1 or 8.
+                {:else if walkthroughStep.value === 6}
+                    When both piles have the same number, quickly tap both Stress buttons!
+                {/if}
+            </p>
         </div>
     </div>
 </div>
