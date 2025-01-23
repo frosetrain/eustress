@@ -1,9 +1,7 @@
 """WebSocket server."""
 
 from asyncio import get_running_loop, run, sleep
-from http import HTTPStatus
 from random import randint
-from signal import SIGTERM
 
 from ordered_set import OrderedSet
 from websockets.asyncio.server import ServerConnection, broadcast, serve
@@ -159,20 +157,10 @@ async def handler(websocket: ServerConnection) -> None:
             await join(websocket, int(args[1]))
 
 
-def health_check(connection, request):
-    """Health check for Render."""
-    if request.path == "/healthz":
-        return connection.respond(HTTPStatus.OK, "OK\n")
-
-
 async def main():
     """Main loop."""
-    loop = get_running_loop()
-    stop = loop.create_future()
-    loop.add_signal_handler(SIGTERM, stop.set_result, None)
-
-    async with serve(handler, "0.0.0.0", 8765, process_request=health_check):
-        await stop
+    async with serve(handler, "0.0.0.0", 8765):
+        await get_running_loop().create_future()  # run forever
 
 
 if __name__ == "__main__":
