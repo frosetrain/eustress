@@ -177,6 +177,7 @@
                     moveCard(true, SlotType.opponentDecks, 0, SlotType.piles, player.value === 1 ? 1 : 0, true)!(Number(args[4]), Number(args[5]));
                     break;
                 case "stuck":
+                    showShout("Both players are stuck, re-dealing…", false, false);
                     switch (Number(args[1])) {
                         case 0:
                             if (player.value == 2) {
@@ -244,6 +245,18 @@
                     break;
                 case "invalidStress":
                     stressPressed = [false, false];
+                    const errorCode = Number(args[1]);
+                    switch (errorCode) {
+                        case 1:
+                            showShout("You can’t stress when the game isn’t ongoing.", true, false);
+                            break;
+                        case 2:
+                            showShout("The numbers on both piles don’t match.", true, false);
+                            break;
+                        case 3:
+                            showShout("You need at least 3 cards in each pile.", true, false);
+                            break;
+                    }
                     break;
                 case "stressed":
                     const stressWon = args[1] === "true";
@@ -251,9 +264,9 @@
                     const loserType = stressWon ? "opponentDecks" : "playerDecks";
                     console.debug("stressed", loserDeckCount, loserType, gameState[loserType]);
                     showShout("STRESS!", true, !stressWon);
-                    if (walkthroughStep.value === 6) {
-                        walkthroughStep.value++;
-                    }
+                    // if (walkthroughStep.value === 6) {
+                    // walkthroughStep.value++;
+                    // }
                     gameState[loserType][0] = gameState[loserType][0].copy({ count: loserDeckCount });
                     gameState.piles[0] = gameState.piles[0].copy({ count: 0 });
                     gameState.piles[1] = gameState.piles[1].copy({ count: 0 });

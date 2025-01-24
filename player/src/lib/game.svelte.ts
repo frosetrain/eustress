@@ -1,6 +1,7 @@
 import { Data } from "dataclass";
 import { PUBLIC_SERVER } from "$env/static/public";
 import { animate, delay } from "motion";
+import { showShout } from "./shout.svelte";
 
 export const SlotType = {
     playerStacks: 0,
@@ -100,10 +101,12 @@ export function moveCard(
     console.debug(opponent, fromSlotType, fromSlotId, toSlotType, toSlotId);
     if (!opponent && moving.player && !revolution) {
         console.debug("moveCard returned: player moving");
+        showShout("You can’t make another move during the animation.", true, false);
         return;
     }
     if (!opponent && !gameStarted.value && toSlotType === SlotType.piles) {
         console.debug("moveCard returned: moved to pile before game started");
+        showShout("You can’t move cards to the piles before the game begins.", true, false);
         return;
     }
 
@@ -115,6 +118,7 @@ export function moveCard(
     }
     if (!opponent && !fromSlot.flipped && !revolution) {
         console.debug("not flipped");
+        showShout("Flip the card first.", true, false);
         return;
     }
 
@@ -122,19 +126,21 @@ export function moveCard(
     const diff = Math.abs(fromSlot.number - toSlot.number);
     if (toSlot.type === SlotType.piles && !(diff === 1 || diff === 8) && !opponent && !revolution) {
         console.debug("moveCard returned: number is not valid");
+        showShout("The moved card’s number must be one higher or one lower than the pile.", true, false);
         return;
     }
 
     // When moving to stacks, make sure it's the same number
     if (toSlot.type === SlotType.playerStacks && toSlot.number !== 0 && fromSlot.number !== toSlot.number) {
         console.debug("moveCard returned: number does not match");
+        showShout("The moved card’s number must be the same as the stack.", true, false);
         return;
     }
 
     if (walkthroughStep.value === 0 || walkthroughStep.value === 1) {
         walkthroughStep.value++;
     }
-    if (toSlot.type === SlotType.piles && (walkthroughStep.value === 4 || walkthroughStep.value === 5)) {
+    if (toSlot.type === SlotType.piles && (walkthroughStep.value === 4 || walkthroughStep.value === 5 || walkthroughStep.value === 6)) {
         walkthroughStep.value++;
     }
 
