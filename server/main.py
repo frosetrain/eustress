@@ -1,6 +1,7 @@
 """WebSocket server."""
 
 from asyncio import get_running_loop, run, sleep
+from datetime import datetime, timedelta, timezone
 from random import randint
 
 from ordered_set import OrderedSet
@@ -143,6 +144,11 @@ def dative_repeat(dative: int) -> tuple[int, int]:
 async def handler(websocket: ServerConnection) -> None:
     """Handle a new connecion."""
     print("connected")
+    # Log that someone joined
+    with open("conn.log", "a") as log:
+        iso_time = datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
+        print(iso_time)
+        log.write(iso_time + "\n")
     try:
         message = await websocket.recv()
     except ConnectionClosedOK:
