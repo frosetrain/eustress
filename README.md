@@ -6,6 +6,8 @@ A real-time, multiplayer card game, using UNO cards. Built with Svelte and Pytho
 
 ### Server
 
+In [game.svelte.ts](player/src/lib/game.svelte.ts), on line 30, change `wss` to `ws`, so that it works without HTTPS when running locally.
+
 ```bash
 cd server
 python3 -m venv venv
@@ -44,7 +46,9 @@ I like this card game in real life, and I feel like it is a challenge to impleme
 
 I designed the card deck with inspiration from the UNO Iconic 70s card deck, which has a very nice design. I copied the concentric ovals design, with each oval being a darker shade of the color. I made it in Inkscape and I included it in my project as an SVG.
 
-The player (frontend) is written using SvelteKit, using TailwindCSS, Framer Motion, and the built-in JavaScript WebSocket API. The server (backend) is written using the Python websockets library.
+The player (frontend) is written using SvelteKit, using TailwindCSS, Framer Motion, and the built-in JavaScript WebSocket API.
+
+The server (backend) is written using the Python websockets library, and hosted on Nest.
 
 The game is mobile responsive, and it supports drag-and-drop card movement on all platforms, using the `mobile-drag-drop` polyfill. It also has keyboard shortcuts for those **pro players**.
 
