@@ -17,7 +17,7 @@ async def start(websocket: ServerConnection) -> None:
     """Start a new game."""
     game = StressGame()
     connected = OrderedSet([websocket])
-    join_key = randint(1, 10)
+    join_key = randint(1000, 9999)
     stress_games[join_key] = game, connected
     try:
         await websocket.send(str(join_key))
