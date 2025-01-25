@@ -2,6 +2,8 @@
 
 A real-time, multiplayer card game, using UNO cards. Built with Svelte and Python websockets.
 
+![Screenshot of the game](screenshot.png)
+
 ## Running locally
 
 ### Server
